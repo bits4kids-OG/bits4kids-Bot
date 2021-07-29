@@ -1,7 +1,6 @@
 {
-    "token": "",
-    "prefix": "",
-    "owner": "",
+    "tokenReal": "",
+    "owner": [],
     "invite": "",
     "blacklist": []
   }
