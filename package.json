@@ -1,0 +1,19 @@
+{
+  "name": "bits4kids",
+  "version": "1.0.0",
+  "description": "Discord Bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "author": "emeraldingg",
+  "license": "ISC",
+  "dependencies": {
+    "better-sqlite3": "^7.4.1",
+    "discord-buttons": "^4.0.0",
+    "discord-prefix": "^2.0.0",
+    "discord.js": "^12.5.3",
+    "edit-json-file": "^1.6.0",
+    "node-fetch": "^2.6.1"
+  }
+}
