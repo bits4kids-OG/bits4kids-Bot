@@ -193,21 +193,25 @@ client.on("message", async (msg) => {
           .setColor(randomColor())
           .setTitle("Diese Buttons und Rollen wurden verbunden:")
           .setThumbnail(client.user.avatarURL());
-  
-          let roleList = "";
-  
+
+          let roleEmpty = [];
+
           for(key in buttons[msg.guild.id]) {
+            roleEmpty.push(key);
+            let roleList = "";
             for (let i = 0; i < buttons[msg.guild.id][key].buttons.length; i++) {
               let role = msg.guild.roles.cache.find(role => role.id === buttons[msg.guild.id][key].buttons[i]);
               roleList = roleList + role.name + "\n"
             }
             linkList.addField(key, roleList);
           }
-  
-          if (checkArrayEmpty(roleList) == true) {
+
+          if (checkArrayEmpty(roleEmpty) == true) {
             linkList.addField("I found no connected elements", "in my Files!")
+          } else {
+            linkList.addField(`I found ${roleEmpty.length} connected button(s)`, `in my Files!`)
           }
-  
+
           msg.author.send("", { embed: linkList });
           break;
         }
@@ -438,9 +442,11 @@ client.on("message", async (msg) => {
           .setTitle("Diese Invites und Rollen wurden verbunden:")
           .setThumbnail(client.user.avatarURL());
 
-          let roleList = "";
+          let roleEmpty = [];
 
           for(key in connections[msg.guild.id]) {
+            roleEmpty.push(key);
+            let roleList = "";
             for (let i = 0; i < connections[msg.guild.id][key].connections.length; i++) {
               let role = msg.guild.roles.cache.find(role => role.id === connections[msg.guild.id][key].connections[i]);
               roleList = roleList + role.name + "\n"
@@ -448,8 +454,10 @@ client.on("message", async (msg) => {
             linkList.addField("https://discord.gg/" + key + ":", roleList);
           }
 
-          if (checkArrayEmpty(roleList) == true) {
+          if (checkArrayEmpty(roleEmpty) == true) {
             linkList.addField("I found no connected elements", "in my Files!")
+          } else {
+            linkList.addField(`I found ${roleEmpty.length} connected Link(s)`, `in my Files!`)
           }
 
           msg.author.send("", { embed: linkList });
@@ -463,7 +471,7 @@ client.on("message", async (msg) => {
       } else {
         let connectionsLinks = getInviteCode(args[0]);
 
-        if (connectionsLinks == null || !invites[msg.guild.id].has(connectionsLinks)) {
+        if (connectionsLinks == null) {
           msg.reply("Warning! No Link found.");
           break;
         }
@@ -482,6 +490,10 @@ client.on("message", async (msg) => {
           }
         }
 
+        if (!invites[msg.guild.id].has(connectionsLinks)) {
+          msg.reply("Warning! No Link found.");
+          break;
+        }
 
         let connectionsRole = getRole(msg.member, args[1]);
         if (connectionsRole == null) {
@@ -545,8 +557,8 @@ client.on("message", async (msg) => {
         .setTitle(`Admin-Hilfe für den bits4kids Bot: (Für normale Commands -> ${guildPrefix}help`)
         .setThumbnail(client.user.avatarURL())
         .addField(
-          `${guildPrefix}refreshInvites`,
-          `Wenn neue Invites erstellt werden, muss dieser Command ausgeführt werden, bevor man eine Rolle verbinden kann. Benötigt die Berechtigung "Manage Server".`
+          `${guildPrefix}refresh`,
+          `Wenn neue Invites erstellt werden, muss dieser Command ausgeführt werden, bevor man eine Rolle verbinden kann. Der Command muss auch ausgeführt werden, wenn eine Datei für die Invitelinks oder Buttons verändert wurde. Benötigt die Berechtigung "Manage Server".`
         )
         .addField(
           `${guildPrefix}inviteconnect`,
@@ -673,21 +685,18 @@ client.on("message", async (msg) => {
     case "reboot":
       if (config.owner.includes(msg.author.id)) {
         msg.reply("Restarting!").then(function () {
-          console.log("Restarted by " + msg.author.username);
+          console.log("Restarted by " + msg.author.tag);
           process.exit(0);
         });
+      } else {
+        msg.author.send("Das darfst du nicht machen!");
       }
       break;
-    case "refreshinvites":
+    case "refresh":
     if (!msg.member.hasPermission("MANAGE_GUILD")) {
       msg.author.send("Das darfst du nicht machen!");
     } else {
-      client.guilds.cache.forEach(guild => {
-        guild.fetchInvites().then(guildInvites => {
-          invites[guild.id] = guildInvites;
-        });
-      });
-      msg.reply("Successfully refreshed the invites!");
+      refresh(msg);
     }
       break;
     case "blackjack":
@@ -751,6 +760,16 @@ function getRole(member, roleName) {
   }
   if (!role) return null;
   return role;
+}
+
+function refresh(msg) {
+    msg.guild.fetchInvites().then(guildInvites => {
+      invites[msg.guild.id] = guildInvites;
+      msg.reply("Successfully refreshed the invites!");
+    });
+  connections = JSON.parse(fs.readFileSync("./connections.json", "utf8"));
+  buttons = JSON.parse(fs.readFileSync("./buttons.json", "utf8"));
+  msg.reply("Successfully refreshed the files!");
 }
 
 function checkArrayEmpty(array) {
