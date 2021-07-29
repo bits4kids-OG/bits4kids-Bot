@@ -20,13 +20,13 @@ const Blackjack = require("./blackjack");
 const blackjackGames = {};
 const invites = {};
 
-let defaultPrefix = '+';
+let defaultPrefix = config.defaultPrefix;
 
 
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`);
   client.user
-    .setPresence({ activity: { name: "-> +help <-" }, status: "online" })
+    .setPresence({ activity: { name: `-> ${defaultPrefix}help <-` }, status: "online" })
     .catch(console.error);
   
   client.guilds.cache.forEach(guild => {
