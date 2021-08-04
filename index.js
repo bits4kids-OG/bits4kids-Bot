@@ -166,14 +166,18 @@ client.on("message", async (msg) => {
       }
       break;
     case "katze":
-      const catObj = await (await fetch("http://aws.random.cat/meow")).json();
-      const embed = new Discord.MessageEmbed()
-        .setColor(randomColor())
-        .setTitle("Katze")
-        .setImage(catObj.file)
-        .setURL(catObj.file)
-        .setFooter("Funktioniert mit random.cat");
-      msg.reply(embed);
+      try {
+        const catObj = await (await fetch("https://aws.random.cat/meow")).json();
+        const embed = new Discord.MessageEmbed()
+          .setColor(randomColor())
+          .setTitle("Katze")
+          .setImage(catObj.file)
+          .setURL(catObj.file)
+          .setFooter("Funktioniert mit random.cat");
+        msg.reply(embed);
+      } catch {
+        msg.reply("Fehler: Die Katzen schlafen gerade.");
+      }
       break;
     case "about":
       msg.reply(
@@ -751,7 +755,7 @@ client.on("guildCreate", async (guild) => {
   }
 });
 
-client.login(config.tokenReal);
+client.login(config.tokenTest);
 
 function findGoodChannel(guild) {
   return guild.channels.cache
