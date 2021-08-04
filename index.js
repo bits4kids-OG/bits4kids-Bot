@@ -78,21 +78,34 @@ client.on('clickButton', async (button) => {
   //await button.reply.defer(true);
   await button.clicker.fetch();
   let roleList = "";
+  let roleAlready = "";
   for(key in buttons[button.guild.id]) {
     if (key === button.id) {
       for (let i = 0; i < buttons[button.guild.id][key].buttons.length; i++) {
         let role = button.guild.roles.cache.find(role => role.id === buttons[button.guild.id][key].buttons[i]);
-        button.clicker.member.roles.add(role);
-        roleList = roleList + role.name + "\n";
-        logChannel?.send(`Added role ${role} to user ${button.clicker.user.tag}.`);
+        if (!button.clicker.member.roles.cache.has(role.id)) {
+          button.clicker.member.roles.add(role);
+          roleList = roleList + role.name + "\n";
+          logChannel?.send(`Added role ${role} to user ${button.clicker.user.tag}.`);
+        } else {
+          roleAlready = roleAlready + role.name + "\n";
+        }
+
       }
     }
   }
-  if (checkArrayEmpty(roleList) == true) {
+  if ((checkArrayEmpty(roleList) == true) && (checkArrayEmpty(roleAlready) == true)) {
     await button.reply.send("Diesem Knopf wurden noch keine Rollen hinzugefügt!", true);
     logChannel?.send(`No roles connected to the button ${button.id}.`);
+  } else if ((checkArrayEmpty(roleList) == true) && (checkArrayEmpty(roleAlready) == false)) {
+    await button.reply.send("Du hast bereits alle Rollen!", true);
+    logChannel?.send(`User already has all roles connected to the button ${button.id}.`);
+  } else if ((checkArrayEmpty(roleList) == false) && (checkArrayEmpty(roleAlready) == false)) {
+    await button.reply.send("Folgende Rollen wurden erfolgreich hinzugefügt: \n" + roleList + ":white_check_mark:" + "\nFolgende Rollen hast du bereits: \n" +roleAlready, true);
+    logChannel?.send(`User already has the role(s): \n${roleAlready}Added role(s): \n${roleList}Connected to the button ${button.id}.`);
   } else {
   await button.reply.send("Folgende Rollen wurden erfolgreich hinzugefügt: \n" + roleList + ":white_check_mark:", true);
+    logChannel?.send(`User didn't have any roles. Added roles: \n${roleList}Connected to the button ${button.id}.`);
     }
     //await button.reply.delete();
 });
