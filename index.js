@@ -41,6 +41,7 @@ client.on("ready", () => {
 
 client.on("guildMemberAdd", member => {
   //console.log("Now checking....");
+  refreshFiles();
   member.guild.fetchInvites().then(guildInvites => {
     const old = invites[member.guild.id];
     invites[member.guild.id] = guildInvites;
@@ -71,6 +72,7 @@ client.on("guildMemberAdd", member => {
 
 
 client.on('clickButton', async (button) => {
+  refreshFiles();
   const logChannel = findLogChannel(button);
   logChannel?.send(`${button.clicker.user.tag} clicked button!`);
   //await button.reply.defer(true);
@@ -183,6 +185,8 @@ client.on("message", async (msg) => {
         break;
       }
     
+      refreshFiles();
+
       let farben = ['blurple', 'grey', 'green', 'red', 'url']
 
       if (!args[0] || !args[1] || !args[2] || !args[3] || (args[0] != "url" && !args[4])) {
@@ -435,6 +439,8 @@ client.on("message", async (msg) => {
       }
       else if (!args[0] || !args[1] || getInviteCode(args[0]) == null) {
 
+        refresh(msg);
+
         if (args[0] === "list") {
           msg.reply("Sent you a DM!");
         const linkList = new Discord.MessageEmbed()
@@ -557,7 +563,7 @@ client.on("message", async (msg) => {
         .setTitle(`Admin-Hilfe für den bits4kids Bot: (Für normale Commands -> ${guildPrefix}help`)
         .setThumbnail(client.user.avatarURL())
         .addField(
-          `${guildPrefix}refreshinvites`,
+          `${guildPrefix}refresh`,
           `Wenn neue Invites erstellt werden, muss dieser Command ausgeführt werden, bevor man eine Rolle verbinden kann. Der Command muss auch ausgeführt werden, wenn eine Datei für die Invitelinks oder Buttons verändert wurde. Benötigt die Berechtigung "Manage Server".`
         )
         .addField(
@@ -692,11 +698,12 @@ client.on("message", async (msg) => {
         msg.author.send("Das darfst du nicht machen!");
       }
       break;
-    case "refreshinvites":
+    case "refresh":
     if (!msg.member.hasPermission("MANAGE_GUILD")) {
       msg.author.send("Das darfst du nicht machen!");
     } else {
       refresh(msg);
+      msg.reply("Successfully refreshed the invites and files!");
     }
       break;
     case "blackjack":
@@ -765,11 +772,14 @@ function getRole(member, roleName) {
 function refresh(msg) {
     msg.guild.fetchInvites().then(guildInvites => {
       invites[msg.guild.id] = guildInvites;
-      msg.reply("Successfully refreshed the invites!");
     });
   connections = JSON.parse(fs.readFileSync("./connections.json", "utf8"));
   buttons = JSON.parse(fs.readFileSync("./buttons.json", "utf8"));
-  msg.reply("Successfully refreshed the files!");
+}
+
+function refreshFiles() {
+  connections = JSON.parse(fs.readFileSync("./connections.json", "utf8"));
+  buttons = JSON.parse(fs.readFileSync("./buttons.json", "utf8"));
 }
 
 function checkArrayEmpty(array) {
