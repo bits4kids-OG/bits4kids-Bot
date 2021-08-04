@@ -557,7 +557,7 @@ client.on("message", async (msg) => {
         .setTitle(`Admin-Hilfe für den bits4kids Bot: (Für normale Commands -> ${guildPrefix}help`)
         .setThumbnail(client.user.avatarURL())
         .addField(
-          `${guildPrefix}refresh`,
+          `${guildPrefix}refreshinvites`,
           `Wenn neue Invites erstellt werden, muss dieser Command ausgeführt werden, bevor man eine Rolle verbinden kann. Der Command muss auch ausgeführt werden, wenn eine Datei für die Invitelinks oder Buttons verändert wurde. Benötigt die Berechtigung "Manage Server".`
         )
         .addField(
@@ -692,7 +692,7 @@ client.on("message", async (msg) => {
         msg.author.send("Das darfst du nicht machen!");
       }
       break;
-    case "refresh":
+    case "refreshinvites":
     if (!msg.member.hasPermission("MANAGE_GUILD")) {
       msg.author.send("Das darfst du nicht machen!");
     } else {
