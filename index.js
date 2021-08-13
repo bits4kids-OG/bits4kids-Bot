@@ -624,6 +624,10 @@ client.on("message", async (msg) => {
           `Erstellt eine Zufallszahl. Korrekte Benutzung: ${guildPrefix}zufallszahl <höchste Zahl> oder ${guildPrefix}zufallszahl <niedrigste Zahl> <höchste Zahl>`
         )
         .addField(
+          `${guildPrefix}collatz`,
+          `Berechnet die Collatz Kurve für die angegebene Zahl. Korrekte Benutzung: ${guildPrefix}collatz <Zahl von 1-30>`
+        )
+        .addField(
           `${guildPrefix}katze`,
           `Zeigt eine zufällige Katze von www.random.cat. an.`
         )
@@ -723,6 +727,25 @@ client.on("message", async (msg) => {
       msg.reply("Successfully refreshed the invites and files!");
     }
       break;
+    case "collatz":
+      if (isNaN(args[0])) {
+        msg.reply(`Korrekte Benutzung: ${guildPrefix}collatz <Zahl von 1-30>`);
+        break;
+      }
+      let number = parseFloat(args[0]).toFixed();
+      let ergebnis = Collatz(msg, number);
+      if (ergebnis == null) break;
+      const CollatzErgebnis = new Discord.MessageEmbed()
+        .setColor(randomColor())
+        .setTitle("Collatz Conjecture")
+        .setAuthor("Lothar Collatz", "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Lothar_Collatz_1984.jpg/457px-Lothar_Collatz_1984.jpg")
+        .setDescription("Das Collatz Problem ist ein Problem in der Mathematik: Ist die Startzahl gerade, wird mit der Hälfte davon weitergerechnet. Ist die Startzahl ungerade, wird sie mit 3 multipiziert und 1 addiert. Die Frage ist, ob dabei jede Zahl in der Schleife 4-2-1 ankommt.")
+        .setThumbnail(client.user.avatarURL())
+        .setURL("https://de.wikipedia.org/wiki/Collatz-Problem")
+        .addField(`Ergebnis:`, `Für die Zahl ${number} wurde eine Tiefe von ${ergebnis[0]} erreicht. Die höchste erreichte Zahl ist ${ergebnis[1]}.`)
+        .setTimestamp();
+      msg.reply(CollatzErgebnis);
+      break;
     case "blackjack":
       if (blackjackGames[msg.author.id]) {
         if (args[0] && args[0] === "end") {
@@ -755,7 +778,7 @@ client.on("guildCreate", async (guild) => {
   }
 });
 
-client.login(config.tokenTest);
+client.login(config.tokenReal);
 
 function findGoodChannel(guild) {
   return guild.channels.cache
@@ -813,6 +836,34 @@ function findLogChannel(msg) {
     logChannel = null;
   }
   return logChannel;
+}
+
+function Collatz (msg, number) {
+  if (number <= 0) {
+    msg.reply("Achtung! Nur postive Zahlen sind erlaubt.");
+    return null;
+  }
+  if (number > 30) {
+    msg.reply("Achtung! Aufgrund enormer Rechenleistung sind nur die natürlichen Zahlen von 1-30 erlaubt.");
+    return null;
+  }
+  let ergebnis = number;
+  let steps = 0;
+  let highest = 0;
+  
+  while (ergebnis > 1) {
+    if (ergebnis % 2 === 0) {
+      ergebnis = ergebnis / 2;
+    } else {
+      ergebnis = ergebnis * 3 + 1;
+    }
+    steps++;
+    if (ergebnis >= highest) {
+      highest = ergebnis;
+    }
+  }
+  let ergebnisse = [steps, highest]
+  return ergebnisse;
 }
 
 function randomColor() {
