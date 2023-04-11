@@ -2,5 +2,15 @@
     "tokenReal": "",
     "owner": [],
     "defaultPrefix": "",
-    "blacklist": []
+    "blacklist": [],
+    "author": "",
+    "invite": "",
+    "OpenWeatherMapAPI": "",
+    "xpChannel": "",
+    "welcomeChannel": "",
+    "TrainerRolle": "",
+    "OrganisationRolle": "",
+    "Meetingräume": "",
+    "GameJamChannel": "",
+    "BeginnerRolle": ""
   }

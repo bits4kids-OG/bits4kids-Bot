@@ -150,7 +150,8 @@ module.exports = class Blackjack {
       const filter = (reaction, user) =>
         (reaction.emoji.name === "➕" || reaction.emoji.name === "➖") &&
         user.id === this.msg.author.id;
-      this.collector = reactMsg.createReactionCollector(filter, {
+      this.collector = reactMsg.createReactionCollector({
+        filter, 
         time: 30000,
         max: 1,
         dispose: true,
@@ -243,7 +244,7 @@ module.exports = class Blackjack {
     if (this.collector) {
       this.collector.stop("blackjack end");
     }
-    this.msg.reply("Blackjack beendet.");
+    //this.msg.reply({ content: "Blackjack beendet.", allowedMentions: { repliedUser: false }});
     this.deck = [];
     this.endCallback();
   }

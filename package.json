@@ -1,6 +1,6 @@
 {
   "name": "bits4kids",
-  "version": "1.1.2",
+  "version": "4.0.0",
   "description": "Discord Bot",
   "main": "index.js",
   "scripts": {
@@ -9,11 +9,12 @@
   "author": "emeraldingg",
   "license": "ISC",
   "dependencies": {
-    "better-sqlite3": "^7.4.1",
-    "discord-buttons": "^4.0.0",
-    "discord-prefix": "^2.0.0",
-    "discord.js": "^12.5.3",
-    "edit-json-file": "^1.6.0",
+    "better-sqlite3": "^7.5.0",
+    "discord-prefix": "^3.0.0",
+    "discord.js": "^13.6.0",
     "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.38.0"
   }
 }

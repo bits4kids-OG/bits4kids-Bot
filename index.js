@@ -1,57 +1,161 @@
 const Discord = require("discord.js");
-const client = new Discord.Client();
 
-const disbut = require("discord-buttons");
-disbut(client);
+const myIntents = new Discord.Intents();
+myIntents.add(Discord.Intents.FLAGS.GUILD_VOICE_STATES, Discord.Intents.FLAGS.DIRECT_MESSAGE_REACTIONS, Discord.Intents.FLAGS.GUILD_MEMBERS, Discord.Intents.FLAGS.DIRECT_MESSAGES, Discord.Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Discord.Intents.FLAGS.GUILD_MESSAGES, Discord.Intents.FLAGS.GUILD_INVITES, Discord.Intents.FLAGS.GUILD_MEMBERS, Discord.Intents.FLAGS.GUILDS);
 
-const fetch = require("node-fetch");
+const client = new Discord.Client({ intents: myIntents });
+
 const prefix = require('discord-prefix');
 
 const config = require("./config.json");
 const { version } = require("./package.json");
 const fs = require("fs");
 
+const utils = require('./utils.js');
+const xp_levels = require("./xp-and-levels.js");
 
 let connections = JSON.parse(fs.readFileSync("./connections.json", "utf8"));
 let buttons = JSON.parse(fs.readFileSync("./buttons.json", "utf8"));
 
-const Blackjack = require("./blackjack");
-
-const blackjackGames = {};
 const invites = {};
+let fromWhere = {};
 
 let defaultPrefix = config.defaultPrefix;
 
 
+client.commands = new Discord.Collection();
+const commandFiles = fs.readdirSync('./cmds').filter(file => file.endsWith('.js'));
+
+for (const file of commandFiles) {
+	const command = require(`./cmds/${file}`);
+	// Set a new item in the Collection
+	// With the key as the command name and the value as the exported module
+	client.commands.set(command.data.name, command);
+}
+
+//Login
+
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`);
   client.user
-    .setPresence({ activity: { name: `-> ${defaultPrefix}help <-` }, status: "online" })
-    .catch(console.error);
+    .setPresence({ activities: [{ name: `-> ${defaultPrefix}help <-` }], status: "online" });
   
   client.guilds.cache.forEach(guild => {
-    guild.fetchInvites().then(guildInvites => {
+    guild.invites.fetch().then(guildInvites => {
       invites[guild.id] = guildInvites;
     });
   });
 
 });
 
+//automatisches Refreshen der Invites, bei Hinzufügen/Entfernen
 
+client.on("inviteDelete", (invite) => {
+  // Delete the Invite from Cache
+  refreshInvites(invite);
+  //console.log(invites);
+});
+
+client.on("inviteCreate", (invite) => {
+  // Update cache on new invites
+  refreshInvites(invite);
+  //console.log(invites);
+});
+
+
+//Anmeldesystem: Rollen werden je nach Invite vergeben
 
 client.on("guildMemberAdd", member => {
+  //console.log(member.guild.features);
+  //Wenn ein Server kein Rules Screening verwendet, wird ein anderes System verwendet.
+  if (!member.guild.features.includes("MEMBER_VERIFICATION_GATE_ENABLED")) {
+    //console.log("Kein Membership Screening!");
+      //console.log("Now checking....");
+      refreshFiles();
+      const old = {};
+      invites[member.guild.id].forEach(inv => {
+        old[inv.code] = {code: inv.code, uses: inv.uses};
+      });
+      member.guild.invites.fetch().then(guildInvites => {
+        invites[member.guild.id] = guildInvites;
+        const invite = guildInvites.find(inv => old[inv.code].uses < inv.uses);
+        const logChannel = utils.findLogChannel(member);
+        if(!invite) {
+          logChannel?.send(`Error: No invite found. New member ${member.tag} probably joined using a single use invite.`);
+            const channel = member.guild.channels.cache.get(config.welcomeChannel);
+            channel?.send(`Herzlich Willkommen auf dem bits4kids-Discord Server, ${member}!`);
+          return;
+        }
+        const inviter = client.users.cache.get(invite.inviter.id);
+        //console.log(invite);
+        logChannel?.send(`${member.user} joined using invite code ${invite.code} from ${inviter}. Invite was used ${invite.uses} times since its creation. This was the URL: ${invite.url}`);
+        let roleList = "";
+        for(const key in connections[member.guild.id]) {
+          //console.log(`Now checking ${key}`);
+          if (key === invite.code) {
+            for (let i = 0; i < connections[member.guild.id][key].connections.length; i++) {
+              let role = member.guild.roles.cache.find(role => role.id === connections[member.guild.id][key].connections[i]);
+              //console.log(connections[member.guild.id][key].connections[i]);
+              //console.log(`Found the Role ${role}`);
+              member.roles.add(role);
+              roleList = roleList + role.name + "\n";
+              logChannel?.send(`Added role ${role} to user ${member.user}.`);
+            }
+          }
+        }
+        if (utils.checkArrayEmpty(roleList) == true) {
+          logChannel?.send(`No roles connected to this invite.`);
+        }
+      });
+
+      //Beginner-Mode
+      const beginnerRole = utils.getRole(member, config.BeginnerRolle);
+
+      utils.addBeginners(member, member.user);
+      if(beginnerRole) {
+        member.roles.add(beginnerRole);
+      }
+
+
+      const channel = member.guild.channels.cache.get(config.welcomeChannel);
+      channel?.send(`Herzlich Willkommen auf dem bits4kids-Discord Server, ${member}!`);
+    return;
+  }
+  //System bei Rules Screening. Es wird gewartet, bis die Regeln akzeptiert werden, bevor die Rolle hinzugefügt wird. Hier: Wenn der Server betreten wird
   //console.log("Now checking....");
-  refreshFiles();
-  member.guild.fetchInvites().then(guildInvites => {
-    const old = invites[member.guild.id];
+  const old = {};
+  invites[member.guild.id].forEach(inv => {
+    old[inv.code] = {code: inv.code, uses: inv.uses};
+  });
+  console.log(invites[member.guild.id]);
+  console.log(old);
+  //refreshFiles();
+  member.guild.invites.fetch().then(guildInvites => {
     invites[member.guild.id] = guildInvites;
-    const invite = guildInvites.find(inv => old.get(inv.code).uses < inv.uses);
+    const invite = guildInvites.find(inv => {
+      if (typeof old[inv.code] === "undefined") {
+        return false;
+      }
+      return old[inv.code].uses < inv.uses;
+    });
+    if (typeof invite === "undefined") {
+      const logChannel = utils.findLogChannel(member);
+      logChannel?.send(`Warning: Encountered an error while trying to find the invite.\n${member.tag}`);
+      logChannel?.send("old: `" + JSON.stringify(old) + "`");
+      logChannel?.send("invites: `" + JSON.stringify(invites[member.guild.id].map(inv => {return {code: inv.code, uses: inv.uses}})) + "`");
+      return;
+    }
     const inviter = client.users.cache.get(invite.inviter.id);
     //console.log(invite);
-    const logChannel = findLogChannel(member);
-    logChannel?.send(`${member.user.tag} joined using invite code ${invite.code} from ${inviter.tag}. Invite was used ${invite.uses} times since its creation. This was the URL: ${invite.url}`);
-    let roleList = "";
-    for(key in connections[member.guild.id]) {
+    const logChannel = utils.findLogChannel(member);
+    logChannel?.send(`${member.user} joined using invite code ${invite.code} from ${inviter}. Invite was used ${invite.uses} times since its creation. This was the URL: ${invite.url}\nAwaiting Membership Screening.`);
+    if(member.guild.id in fromWhere === false) {
+      fromWhere[member.guild.id] = {};
+    }
+    let guildMember = fromWhere[member.guild.id];
+    guildMember[member.id] = invite;
+    /*let roleList = "";
+    for(const key in connections[member.guild.id]) {
       //console.log(`Now checking ${key}`);
       if (key === invite.code) {
         for (let i = 0; i < connections[member.guild.id][key].connections.length; i++) {
@@ -60,33 +164,105 @@ client.on("guildMemberAdd", member => {
           //console.log(`Found the Role ${role}`);
           member.roles.add(role);
           roleList = roleList + role.name + "\n";
-          logChannel?.send(`Added role ${role} to user ${member.user.tag}.`);
+          logChannel?.send(`Added role ${role} to user ${member.user}.`);
         }
       }
     }
-    if (checkArrayEmpty(roleList) == true) {
+    if (utils.checkArrayEmpty(roleList) == true) {
       logChannel?.send(`No roles connected to this invite.`);
     }
+    const channel = member.guild.channels.cache.get(875746344323674232);
+    channel?.send(`Herzlich Willkommen auf dem bits4kids-Discord Server, ${member}!`);*/
   });
 });
 
+//Wenn die Regeln akzeptiert werden
+client.on("guildMemberUpdate", (oldMember, newMember) => {
+  //console.log("hi");
+  if (oldMember.pending && !newMember.pending) {
+    const member = newMember;
+    //yconsole.log("Now checking....");
+    refreshFiles();
+    const logChannel = utils.findLogChannel(member);
+    let invite;
+    if(member.guild.id in fromWhere === false) {
+      fromWhere[member.guild.id] = {};
+    }
+    let guildMember = fromWhere[member.guild.id];
+    if(member.id in guildMember === true) {
+      invite = guildMember[member.id];
+      logChannel?.send(`Member ${member.user} passed membership screening.`)
+    } else {
+      logChannel?.send(`Warning: Member ${member.user} passed membership screening, but they were not among the pending users.`);
+    }
+    //member.guild.invites.fetch().then(guildInvites => {
+    //  const old = invites[member.guild.id];
+    //  invites[member.guild.id] = guildInvites;
+    //  const invite = guildInvites.find(inv => old.get(inv.code).uses < inv.uses);
+    //  const inviter = client.users.cache.get(invite.inviter.id);
+      //console.log(invite);
+    //  logChannel?.send(`${member.user} joined using invite code ${invite.code} from ${inviter}. Invite was used ${invite.uses} times since its creation. This was the URL: ${invite.url}`);
+    if(invite) { 
+    let roleList = "";
+      for(const key in connections[member.guild.id]) {
+        //console.log(`Now checking ${key}`);
+        if (key === invite.code) {
+          for (let i = 0; i < connections[member.guild.id][key].connections.length; i++) {
+            let role = member.guild.roles.cache.find(role => role.id === connections[member.guild.id][key].connections[i]);
+            //console.log(connections[member.guild.id][key].connections[i]);
+            //console.log(`Found the Role ${role}`);
+            member.roles.add(role);
+            roleList = roleList + role.name + "\n";
+            logChannel?.send(`Added role ${role} to user ${member.user}.`);
+          }
+        }
+      }
+      if (utils.checkArrayEmpty(roleList) == true) {
+        logChannel?.send(`No roles connected to this invite.`);
+      }
+      delete guildMember[member.id];
+    } else {
+      logChannel?.send(`Skipping invite-connection system.`);
+    }
 
-client.on('clickButton', async (button) => {
+      //Beginner-Mode
+      const beginnerRole = utils.getRole(member, config.BeginnerRolle);
+      
+      utils.addBeginners(member, member.user);
+      if(beginnerRole) {
+        member.roles.add(beginnerRole);
+      }
+
+      
+      const channel = member.guild.channels.cache.get(config.welcomeChannel);
+      channel?.send(`Herzlich Willkommen auf dem bits4kids-Discord Server, ${member}!`);
+    //});
+  }
+});
+
+
+//Rollensystem per Buttons
+
+client.on('interactionCreate', async interaction => {
+	if (!interaction.isButton()) return;
+	//console.log(interaction);
+  await interaction.deferReply({ ephemeral: true });
+  const button = interaction;
   refreshFiles();
-  const logChannel = findLogChannel(button);
-  logChannel?.send(`${button.clicker.user.tag} clicked button!`);
-  //await button.reply.defer(true);
-  await button.clicker.fetch();
+  const logChannel = utils.findLogChannel(button);
+  logChannel?.send(`${button.user} clicked button!`);
+  const member = button.guild.members.cache.get(button.user.id);
+  //console.log(member);
   let roleList = "";
   let roleAlready = "";
-  for(key in buttons[button.guild.id]) {
-    if (key === button.id) {
+  for(const key in buttons[button.guild.id]) {
+    if (key === button.customId) {
       for (let i = 0; i < buttons[button.guild.id][key].buttons.length; i++) {
         let role = button.guild.roles.cache.find(role => role.id === buttons[button.guild.id][key].buttons[i]);
-        if (!button.clicker.member.roles.cache.has(role.id)) {
-          button.clicker.member.roles.add(role);
+        if (!member.roles.cache.has(role.id)) {
+          member.roles.add(role);
           roleList = roleList + role.name + "\n";
-          logChannel?.send(`Added role ${role} to user ${button.clicker.user.tag}.`);
+          logChannel?.send(`Added role ${role} to user ${button.user}.`);
         } else {
           roleAlready = roleAlready + role.name + "\n";
         }
@@ -94,681 +270,136 @@ client.on('clickButton', async (button) => {
       }
     }
   }
-  if ((checkArrayEmpty(roleList) == true) && (checkArrayEmpty(roleAlready) == true)) {
-    await button.reply.send("Diesem Knopf wurden noch keine Rollen hinzugefügt!", true);
-    logChannel?.send(`No roles connected to the button ${button.id}.`);
-  } else if ((checkArrayEmpty(roleList) == true) && (checkArrayEmpty(roleAlready) == false)) {
-    await button.reply.send("Du hast bereits alle Rollen!", true);
-    logChannel?.send(`User already has all roles connected to the button ${button.id}.`);
-  } else if ((checkArrayEmpty(roleList) == false) && (checkArrayEmpty(roleAlready) == false)) {
-    await button.reply.send("Folgende Rollen wurden erfolgreich hinzugefügt: \n" + roleList + ":white_check_mark:" + "\nFolgende Rollen hast du bereits: \n" +roleAlready, true);
-    logChannel?.send(`User already has the role(s): \n${roleAlready}Added role(s): \n${roleList}Connected to the button ${button.id}.`);
+  if ((utils.checkArrayEmpty(roleList) == true) && (utils.checkArrayEmpty(roleAlready) == true)) {
+    await button.editReply("Diesem Knopf wurden noch keine Rollen hinzugefügt!");
+    logChannel?.send(`No roles connected to the button ${button.customId}.`);
+  } else if ((utils.checkArrayEmpty(roleList) == true) && (utils.checkArrayEmpty(roleAlready) == false)) {
+    await button.editReply("Du hast bereits alle Rollen!");
+    logChannel?.send(`User already has all roles connected to the button ${button.customId}.`);
+  } else if ((utils.checkArrayEmpty(roleList) == false) && (utils.checkArrayEmpty(roleAlready) == false)) {
+    await button.editReply("Folgende Rollen wurden erfolgreich hinzugefügt: \n" + roleList + ":white_check_mark:" + "\nFolgende Rollen hast du bereits: \n" +roleAlready);
+    logChannel?.send(`User already has the role(s): \n${roleAlready}Added role(s): \n${roleList}Connected to the button ${button.customId}.`);
   } else {
-  await button.reply.send("Folgende Rollen wurden erfolgreich hinzugefügt: \n" + roleList + ":white_check_mark:", true);
-    logChannel?.send(`User didn't have any roles. Added roles: \n${roleList}Connected to the button ${button.id}.`);
+    await button.editReply("Folgende Rollen wurden erfolgreich hinzugefügt: \n" + roleList + ":white_check_mark:");
+    logChannel?.send(`User didn't have any roles. Added roles: \n${roleList}Connected to the button ${button.customId}.`);
     }
     //await button.reply.delete();
 });
 
+//Voice Channel Detection
+client.on("voiceStateUpdate", (oldState, newState) => {
+  const trainRole = newState.guild.roles.cache.find(r => r.id === config.TrainerRolle);
+  const orgRole = newState.guild.roles.cache.find(r => r.id === config.OrganisationRolle);
+  if ((trainRole) && (orgRole) && (newState.member.roles) && ((newState.member.roles.cache.has(trainRole.id)) || (newState.member.roles.cache.has(orgRole.id)))) {
+    return;
+  }
+  if ((newState.channel) && (oldState.channel) && (newState.channel.id === oldState.channel.id)) return;
 
+  const Zeit = new Date().toLocaleString("en-GB")
+  
+  if ((newState.channel) && (!oldState.channel)) {
+    if(!newState.channel.name.includes(config.Meetingräume)) return;
+    const VoiceLogChannel = utils.findVoiceLogChannel(newState);
+    VoiceLogChannel?.send(`${newState.member} has joined the voice channel "${newState.channel.name}".\nTime: ${Zeit}`);
 
-client.on("message", async (msg) => {
+    //Beginner Mode Check
+    const minute = 1000 * 60;
+    const hour = minute * 60;
+    const day = hour * 24;
+    const week = day * 7;
+
+    const member = newState.member;
+    const beginnerRole = utils.getRole(member, config.BeginnerRolle);
+
+    const beginners = utils.getBeginners(member, member.user);
+    const guildbeginners = beginners[member.guild.id];
+
+    if(member.user.id in guildbeginners === false) return;
+
+    const userBeginner = beginners[member.guild.id][member.user.id];
+
+    if((userBeginner.joined) && ((Date.now() - userBeginner.joined) >= 4*week)) {
+      if(beginnerRole && member.roles.cache.has(beginnerRole) == true) {
+        member.roles.remove(beginnerRole);
+      }
+      delete(beginners[member.guild.id][member.user.id]);
+
+      fs.writeFileSync("./beginners.json", JSON.stringify(beginners, null, 2), err => {
+        if(err) console.log(err)
+      });
+    }
+
+  }/* else if ((!newState.channel) && (oldState.channel)) {
+    if(!oldState.channel.name.includes(config.Meetingräume)) return;
+    VoiceLogChannel?.send(`${newState.member} has left the voice channel "${oldState.channel.name}".\nTime: ${Zeit}`);
+  }*/ else if ((newState.channel) && (oldState.channel)) {
+    if (newState.channel.id !== oldState.channel.id) {
+      if(!newState.channel.name.includes(config.Meetingräume)) return;
+      const VoiceLogChannel = utils.findVoiceLogChannel(newState);
+      VoiceLogChannel?.send(`${newState.member} switched from voice channel "${oldState.channel.name}" to "${newState.channel.name}".\nTime: ${Zeit}`);
+    }
+  }
+
+});
+
+//Command- & Levelsystem
+
+client.on("messageCreate", async (msg) => {
   if (msg.author.bot) return;
   if (!msg.guild) {
     msg.reply("Entschuldigung, aber der Bot funktioniert nur in Servern.")
     return;
   }
 
+
   let guildPrefix = prefix.getPrefix(msg.guild.id);
   if (!guildPrefix) guildPrefix = defaultPrefix;
 
-  if (!msg.content.startsWith(guildPrefix)) return;
+  if (!msg.content.startsWith(guildPrefix)) {
+    const trainRole = msg.guild.roles.cache.find(r => r.id === config.TrainerRolle);
+    const orgRole = msg.guild.roles.cache.find(r => r.id === config.OrganisationRolle);
+    if ((trainRole) && (orgRole) && (msg.member.roles) && ((msg.member.roles.cache.has(trainRole.id)) || (msg.member.roles.cache.has(orgRole.id)))) {
+      return;
+    }
+
+      //Vergabe von XP-Punkten
+
+  const userXP = utils.getXP(msg, msg.author)[msg.guild.id][msg.author.id];
+
+  //Checken, wann die letzte Nachricht war, dann Vergabe per Zufall
+
+  if(userXP.timeout >= Date.now()) return;
+  if(Date.now() - userXP.last_message >= 30000) {
+    xp_levels.addXP(msg, msg.author, utils.randomNumber(15, 25), guildPrefix);
+  }
+    return;
+  }
+
   // Blacklist
   if (config.blacklist.includes(msg.author.id)) {
     msg.author.send("Das darfst du nicht machen!");
     return;
   }
+
+  //Commands
   const args = msg.content.substr(guildPrefix.length).split(/ +/);
   const cmd = args.shift().toLowerCase();
 
-  switch (cmd) {
-    case "ping":
-      msg.reply("Pong!");
-      break;
-    case "changepresence":
-      if (config.owner.includes(msg.author.id)) {
-        if (!args[0]) {
-          msg.reply(`Correct usage: ${guildPrefix}changepresence <status (online, idle, ...)> <text that will be shown>`);
-          return;
-        }
-        const status = args.shift().toLowerCase();
-        client.user
-          .setPresence({ activity: { name: args.join(" ") }, status: status })
-          .catch(console.error);
-      } else {
-        msg.author.send("Das darfst du nicht machen!");
-      }
-      break;
-    case "changeprefix":
-      if (!msg.member.hasPermission("MANAGE_GUILD")) {
-        msg.author.send("Das darfst du nicht machen!");
-      }
-      else if (!args[0] || args[0] === "help") {
-        msg.reply(`Correct usage: ${guildPrefix}changeprefix <desired prefix>`);
-      }
-      else if (args[0].length >= 3) {
-        msg.reply("Your prefix can't be longer than 3 characters!");
-      }
-      else {
-        prefix.setPrefix(args[0], msg.guild.id);
-        guildPrefix = prefix.getPrefix(msg.guild.id);
-        msg.reply(`Prefix changed to ${guildPrefix}`);
-      }
-      break;
-    case "katze":
-      try {
-        const catObj = await (await fetch("https://aws.random.cat/meow")).json();
-        const embed = new Discord.MessageEmbed()
-          .setColor(randomColor())
-          .setTitle("Katze")
-          .setImage(catObj.file)
-          .setURL(catObj.file)
-          .setFooter("Funktioniert mit random.cat");
-        msg.reply(embed);
-      } catch {
-        msg.reply("Fehler: Die Katzen schlafen gerade.");
-      }
-      break;
-    case "about":
-      msg.reply(
-        `Hallo! Ich bin ein nützlicher Discord Bot, der vom Programmierer und Discord-Benutzer emeraldingg#2697 erstellt wurde. Mein aktueller Prefix ist ${guildPrefix}. Mit mir kannst du Katzenfotos bekommen, zufällige Zahlen erstellen und Blackjack spielen.\nIch hoffe du hast Spaß! Version: ${version}`
-      );
-      break;
-    case "zufallszahl":
-      if (!args[0] || isNaN(args[0])) {
-        msg.reply(
-          `Korrekte Benutzung: ${guildPrefix}zufallszahl <höchste Zahl> oder ${guildPrefix}zufallszahl <niedrigste Zahl> <höchste Zahl>`
-        );
-      } else if (!args[1] || isNaN(args[1])) {
-        msg.reply(randomNumber(0, Math.round(args[0])));
-      } else {
-        msg.reply(randomNumber(Math.round(args[0]), Math.round(args[1])));
-      }
-      break;
-    case "button":
-      
-      if (!msg.member.hasPermission("MANAGE_GUILD")) {
-        msg.author.send("Das darfst du nicht machen!");
-        break;
-      }
-    
-      refreshFiles();
-
-      let farben = ['blurple', 'grey', 'green', 'red', 'url']
-
-      if (!args[0] || !args[1] || !args[2] || !args[3] || (args[0] != "url" && !args[4])) {
-
-        if (args[0] === "list") {
-          msg.reply("Sent you a DM!");
-        const linkList = new Discord.MessageEmbed()
-          .setColor(randomColor())
-          .setTitle("Diese Buttons und Rollen wurden verbunden:")
-          .setThumbnail(client.user.avatarURL());
-
-          let roleEmpty = [];
-
-          for(key in buttons[msg.guild.id]) {
-            roleEmpty.push(key);
-            let roleList = "";
-            for (let i = 0; i < buttons[msg.guild.id][key].buttons.length; i++) {
-              let role = msg.guild.roles.cache.find(role => role.id === buttons[msg.guild.id][key].buttons[i]);
-              roleList = roleList + role.name + "\n"
-            }
-            linkList.addField(key, roleList);
-          }
-
-          if (checkArrayEmpty(roleEmpty) == true) {
-            linkList.addField("I found no connected elements", "in my Files!")
-          } else {
-            linkList.addField(`I found ${roleEmpty.length} connected button(s)`, `in my Files!`)
-          }
-
-          msg.author.send("", { embed: linkList });
-          break;
-        }
-
-
-          if ((args[1]) && (args[1] === "unset")) {
-            let buttonsID = args[0];
-            if (buttonsID == null || !buttons[msg.guild.id][buttonsID]) {
-              msg.reply("Warning! No ID found.");
-              break;
-            }
-            if (buttons[msg.guild.id][buttonsID]) {
-              delete(buttons[msg.guild.id][buttonsID]);
-              fs.writeFile("./buttons.json", JSON.stringify(buttons, null, 2), err => {
-                if(err) console.log(err)
-              });
-              msg.reply(`Succesfully removed the Button ${buttonsID} and connected Role(s)!`);
-              break;
-            } else {
-                msg.reply("Sorry, but I couldn't find that Button in my Files.");
-                break;
-            }
-          }
-    
-    
-
-          
-          if ((args[2]) && (args[2] === "unset")) {
-            let buttonsID = args[0];
-            if (buttonsID == null || !buttons[msg.guild.id][buttonsID]) {
-              msg.reply("Warning! No ID found.");
-              break;
-            }
-            let buttonsRole = getRole(msg.member, args[1]);
-            if (buttonsRole == null) {
-              msg.reply("Warning! No role found.");
-              break;
-            }
-            if ((buttons[msg.guild.id][buttonsID]) && (buttons[msg.guild.id][buttonsID].buttons.includes(buttonsRole.id))) {
-              for (let i = 0; i < buttons[msg.guild.id][buttonsID].buttons.length; i++) {
-                if (buttons[msg.guild.id][buttonsID].buttons[i] === buttonsRole.id) {
-                  buttons[msg.guild.id][buttonsID].buttons.splice(i,1);
-                }
-              }
-              fs.writeFile("./buttons.json", JSON.stringify(buttons, null, 2), err => {
-                if(err) console.log(err)
-              });
-              msg.reply(`Succesfully removed the connected Role ${buttonsRole}!`);
-              break;
-            } else {
-              msg.reply("Sorry, but I couldn't find that Button in my Files.");
-              break;
-            }
-          }
-
-          if ((args[2]) && (args[2] === "connect")) {
-            let buttonsID = args[0];
-            if (buttonsID == null || !buttons[msg.guild.id][buttonsID]) {
-              msg.reply("Warning! No ID found.");
-              break;
-            }
-            let buttonsRole = getRole(msg.member, args[1]);
-            if (buttonsRole == null) {
-              msg.reply("Warning! No role found.");
-              break;
-            }
-
-            if (!buttons[msg.guild.id]) {
-              buttons[msg.guild.id] = {};
-              buttons[msg.guild.id][buttonsID] = {};
-              buttons[msg.guild.id][buttonsID].buttons = [];
-            } else {
-              if ((!buttons[msg.guild.id][buttonsID]) || (!buttons[msg.guild.id][buttonsID].buttons) || (!buttons[msg.guild.id][buttonsID].buttons.includes(buttonsRole.id))) {
-                if (!buttons[msg.guild.id][buttonsID]) {
-                  buttons[msg.guild.id][buttonsID] = {};
-                }
-                if (!buttons[msg.guild.id][buttonsID].buttons) {
-                  buttons[msg.guild.id][buttonsID].buttons = [];
-                }
-      
-              } else {
-                msg.reply("Sorry, but that Button is already connected. Try unsetting it first.");
-                break;
-              }
-            }
-                buttons[msg.guild.id][buttonsID].buttons.push(buttonsRole.id);
-                fs.writeFile("./buttons.json", JSON.stringify(buttons, null, 2), err => {
-                  if(err) console.log(err)
-                });
-                msg.reply(`Succesfully connected the Button ${buttonsID} and Role ${buttonsRole}!`);
-                break;
-          }
-
-        msg.reply(`Correct usage: ${guildPrefix}button create <id> <color> <text_on_button> <text in message> or ${guildPrefix}button <id> <desired role to connect> <color> <text_on_button> <text in message> or ${guildPrefix}button <id> <desired role to connect> connect or ${guildPrefix}button <id> unset or ${guildPrefix}button <id> <role> unset or ${guildPrefix}button url <desired link> <text_on_button> <text in message>`);
-        break;
-      }
-
-
-      if (args[0] === "create") {
-        if (!farben.includes(args[2])) {
-          msg.reply("This style is not supported!");
-          break;
-        } else {
-            let buttonsID = args[1];
-            let buttonsColor = args[2];
-            let buttonText = args[3]
-              .split("_").join(" ");
-            let msgText = args
-              .slice(4)
-              .join(" ");
-  
-          let button = new disbut.MessageButton()
-            .setStyle(buttonsColor)
-            .setID(buttonsID)
-            .setLabel(buttonText);
-          
-          msg.channel.send(msgText, button);
-
-          if (!buttons[msg.guild.id]) {
-            buttons[msg.guild.id] = {};
-            buttons[msg.guild.id][buttonsID] = {};
-            buttons[msg.guild.id][buttonsID].buttons = [];
-          } else {
-            if ((!buttons[msg.guild.id][buttonsID]) || (!buttons[msg.guild.id][buttonsID].buttons)) {
-              if (!buttons[msg.guild.id][buttonsID]) {
-                buttons[msg.guild.id][buttonsID] = {};
-              }
-              if (!buttons[msg.guild.id][buttonsID].buttons) {
-                buttons[msg.guild.id][buttonsID].buttons = [];
-              }
-    
-            } else {
-              msg.reply("Though that Button is already connected, I still created a new one with the same connections.");
-              break;
-            }
-          }
-
-          fs.writeFile("./buttons.json", JSON.stringify(buttons, null, 2), err => {
-            if(err) console.log(err)
-          });
-          msg.reply(`Succesfully created the Button ${buttonsID}!`);
-          break;
-
-      }
-    }
-
-
-      let buttonsColor = args[0];
-      let buttonsID = args[1];
-      let buttonText = args[2]
-        .split("_").join(" ");
-      let msgText = args
-        .slice(3)
-        .join(" ");
-
-      if (args[0] === "url") {
-        if (!buttonsID.includes("https") && !buttonsID.includes("http") && !buttonsID.includes("discord")) {
-          msg.reply(`Correct usage: ${guildPrefix}button create <id> <color> <text_on_button> <text in message> or ${guildPrefix}button <id> <desired role to connect> <color> <text_on_button> <text in message> or ${guildPrefix}button <id> <desired role to connect> connect or ${guildPrefix}button <id> unset or ${guildPrefix}button <id> <role> unset or ${guildPrefix}button url <desired link> <text_on_button> <text in message>`);
-          break;
-        }
-
-        let button = new disbut.MessageButton()  
-          .setStyle(buttonsColor)
-          .setURL(buttonsID) 
-          .setLabel(buttonText);
-
-        msg.channel.send(msgText, button);
-      } else if (!farben.includes(args[2])) {
-        msg.reply("This style is not supported!");
-        break;
-      } else {
-          let buttonsID = args[0];
-          let buttonsRole = getRole(msg.member, args[1]);
-          if (buttonsRole == null) {
-            msg.reply("Warning! No role found.");
-            break;
-          }
-          let buttonsColor = args[2];
-          let buttonText = args[3]
-            .split("_").join(" ");
-          let msgText = args
-            .slice(4)
-            .join(" ");
-
-        let button = new disbut.MessageButton()
-          .setStyle(buttonsColor)
-          .setID(buttonsID)
-          .setLabel(buttonText);
-        
-        msg.channel.send(msgText, button);
-      
-
-        if (!buttons[msg.guild.id]) {
-          buttons[msg.guild.id] = {};
-          buttons[msg.guild.id][buttonsID] = {};
-          buttons[msg.guild.id][buttonsID].buttons = [];
-        } else {
-          if ((!buttons[msg.guild.id][buttonsID]) || (!buttons[msg.guild.id][buttonsID].buttons) || (!buttons[msg.guild.id][buttonsID].buttons.includes(buttonsRole.id))) {
-            if (!buttons[msg.guild.id][buttonsID]) {
-              buttons[msg.guild.id][buttonsID] = {};
-            }
-            if (!buttons[msg.guild.id][buttonsID].buttons) {
-              buttons[msg.guild.id][buttonsID].buttons = [];
-            }
-  
-          } else {
-            msg.reply("Though that Button is already connected, I still created a new one with the same connections.");
-            break;
-          }
-        }
-            buttons[msg.guild.id][buttonsID].buttons.push(buttonsRole.id);
-            fs.writeFile("./buttons.json", JSON.stringify(buttons, null, 2), err => {
-              if(err) console.log(err)
-            });
-            msg.reply(`Succesfully connected the Button ${buttonsID} and Role ${buttonsRole}!`);
-    }  
-      break;
-    case "inviteconnect":
-      if (!msg.member.hasPermission("MANAGE_GUILD")) {
-        msg.author.send("Das darfst du nicht machen!");
-      }
-      else if (!args[0] || !args[1] || getInviteCode(args[0]) == null) {
-
-        refresh(msg);
-
-        if (args[0] === "list") {
-          msg.reply("Sent you a DM!");
-        const linkList = new Discord.MessageEmbed()
-          .setColor(randomColor())
-          .setTitle("Diese Invites und Rollen wurden verbunden:")
-          .setThumbnail(client.user.avatarURL());
-
-          let roleEmpty = [];
-
-          for(key in connections[msg.guild.id]) {
-            roleEmpty.push(key);
-            let roleList = "";
-            for (let i = 0; i < connections[msg.guild.id][key].connections.length; i++) {
-              let role = msg.guild.roles.cache.find(role => role.id === connections[msg.guild.id][key].connections[i]);
-              roleList = roleList + role.name + "\n"
-            }
-            linkList.addField("https://discord.gg/" + key + ":", roleList);
-          }
-
-          if (checkArrayEmpty(roleEmpty) == true) {
-            linkList.addField("I found no connected elements", "in my Files!")
-          } else {
-            linkList.addField(`I found ${roleEmpty.length} connected Link(s)`, `in my Files!`)
-          }
-
-          msg.author.send("", { embed: linkList });
-          break;
-
-        } else {
-        msg.reply(`Correct usage: ${guildPrefix}inviteconnect <Invite URL or Code> <Name of the role> or ${guildPrefix}inviteconnect <Invite URL or Code> <Connected Role> unset or ${guildPrefix}inviteconnect <Invite URL or Code> unset or ${guildPrefix}inviteconnect list`)
-        }
-      } else if (args[2] && args[2] != "unset") {
-        msg.reply(`The role can only be 1 argument -> No spaces\nCorrect usage: ${guildPrefix}inviteconnect <Invite URL or Code> <Name of the role> or ${guildPrefix}inviteconnect <Invite URL or Code> <Connected Role> unset or ${guildPrefix}inviteconnect <Invite URL or Code> unset or ${guildPrefix}inviteconnect list`)
-      } else {
-        let connectionsLinks = getInviteCode(args[0]);
-
-        if (connectionsLinks == null) {
-          msg.reply("Warning! No Link found.");
-          break;
-        }
-
-        if ((args[1]) && (args[1] === "unset")) {
-          if (connections[msg.guild.id][connectionsLinks]) {
-            delete(connections[msg.guild.id][connectionsLinks]);
-            fs.writeFile("./connections.json", JSON.stringify(connections, null, 2), err => {
-              if(err) console.log(err)
-            });
-            msg.reply(`Succesfully removed the Link ${connectionsLinks} and connected Role(s)!`);
-            break;
-          } else {
-              msg.reply("Sorry, but I couldn't find that Link in my Files.");
-              break;
-          }
-        }
-
-        if (!invites[msg.guild.id].has(connectionsLinks)) {
-          msg.reply("Warning! No Link found.");
-          break;
-        }
-
-        let connectionsRole = getRole(msg.member, args[1]);
-        if (connectionsRole == null) {
-          msg.reply("Warning! No role found.");
-          break;
-        }
-        
-        if ((args[2]) && (args[2] === "unset")) {
-          if ((connections[msg.guild.id][connectionsLinks]) && (connections[msg.guild.id][connectionsLinks].connections.includes(connectionsRole.id))) {
-            for (let i = 0; i < connections[msg.guild.id][connectionsLinks].connections.length; i++) {
-              if (connections[msg.guild.id][connectionsLinks].connections[i] === connectionsRole.id) {
-                connections[msg.guild.id][connectionsLinks].connections.splice(i,1);
-              }
-            }
-            fs.writeFile("./connections.json", JSON.stringify(connections, null, 2), err => {
-              if(err) console.log(err)
-            });
-            msg.reply(`Succesfully removed the connected Role ${connectionsRole}!`);
-            break;
-          } else {
-            msg.reply("Sorry, but I couldn't find that Link in my Files.");
-            break;
-          }
-        } else {
-        if (!connections[msg.guild.id]) {
-          connections[msg.guild.id] = {};
-          connections[msg.guild.id][connectionsLinks] = {};
-          connections[msg.guild.id][connectionsLinks].connections = [];
-        } else {
-          if ((!connections[msg.guild.id][connectionsLinks]) || (!connections[msg.guild.id][connectionsLinks].connections) || (!connections[msg.guild.id][connectionsLinks].connections.includes(connectionsRole.id))) {
-            if (!connections[msg.guild.id][connectionsLinks]) {
-              connections[msg.guild.id][connectionsLinks] = {};
-            }
-            if (!connections[msg.guild.id][connectionsLinks].connections) {
-              connections[msg.guild.id][connectionsLinks].connections = [];
-            }
-
-          } else {
-            msg.reply("Sorry, but that Link is already connected. Try unsetting it first.");
-            break;
-          }
-        }
-            connections[msg.guild.id][connectionsLinks].connections.push(connectionsRole.id);
-            fs.writeFile("./connections.json", JSON.stringify(connections, null, 2), err => {
-              if(err) console.log(err)
-            });
-            msg.reply(`Succesfully connected the Link ${connectionsLinks} and Role ${connectionsRole}!`);
-      }
-    }
-      break;
-    case "help":
-    
-    if (args[0] && args[0] === "admin") {
-      if (!msg.member.hasPermission("MANAGE_GUILD")) {
-        msg.author.send("Das darfst du nicht machen!");
-        break;
-      }
-      msg.reply("Sent you a DM!");
-      const help = new Discord.MessageEmbed()
-        .setColor(randomColor())
-        .setTitle(`Admin-Hilfe für den bits4kids Bot: (Für normale Commands -> ${guildPrefix}help`)
-        .setThumbnail(client.user.avatarURL())
-        .addField(
-          `${guildPrefix}refresh`,
-          `Wenn neue Invites erstellt werden, muss dieser Command ausgeführt werden, bevor man eine Rolle verbinden kann. Der Command muss auch ausgeführt werden, wenn eine Datei für die Invitelinks oder Buttons verändert wurde. Benötigt die Berechtigung "Manage Server".`
-        )
-        .addField(
-          `${guildPrefix}inviteconnect`,
-          `Verknüpft einen Invite-Link oder nur den Code mit einer Rolle. Entweder den Namen der Rolle eingeben, oder die ID kopieren. Joint jemand mit diesem Invite, bekommt er automatisch die richtige Rolle zugewiesen. Benötigt die Berechtigung "Manage Server".`
-        )
-        .addField(`${guildPrefix}help admin`, `Lädt diese Seite. Benötigt die Berechtigung "Manage Server".`)
-        .addField(`${guildPrefix}reboot`, `Startet den Bot neu. Benötigt die Berechtigung "Owner" -> emeraldingg anschreiben`)
-        //.addField(`${guildPrefix}changeprefix`, `Ändert den Prefix des Bots. Du benötigst die Berichtigung, den Server zu verwalten.`)
-        .addField(
-          `${guildPrefix}announce`,
-          `Schreibt auf jeden Server eine Nachricht, auf der der Bot drauf ist. Benötigt die Berechtigung "Owner" -> emeraldingg anschreiben`
-        )
-        
-        .addField(`${guildPrefix}button`, `Erstellt und Verknüpft einen Button mit einer Rolle. Benötigt die Berechtigung "Manage Server".`)
-        //.addField(
-        //  `${guildPrefix}invite`,
-        //  `Shows the invite link for this bot.`
-        //)
-        //.addField(`${guildPrefix}serverinvite`, `Erstellt einen Serverinvite und schickt ihn per DM.`)
-        .addField(`${guildPrefix}changePresence`, `Ändert den Status des Bots (sieht man auf der Seite). Wird nach einem Neustart zurückgesetzt und gilt für alle Server. Benötigt die Berechtigung "Owner" -> emeraldingg anschreiben`)
-        .addField(`${guildPrefix}changePrefix`, `Ändert den Prefix für den aktuellen Server. Die Hilfeseiten werden angepasst. Benötigt die Berechtigung "Manage Server".`);
-      msg.author.send("", { embed: help });
-      break;
-    }
-    
-    msg.reply("Hier findest du die Hilfe:");
-      const help = new Discord.MessageEmbed()
-        .setColor(randomColor())
-        .setTitle("Hilfe für den bits4kids Bot:")
-        .setThumbnail(client.user.avatarURL())
-        .addField(
-          `${guildPrefix}blackjack`,
-          `Spiele Blackjack mit dem Bot als Dealer.`
-        )
-        .addField(`${guildPrefix}help`, `Lädt diese Seite.`)
-        .addField(`${guildPrefix}about`, `Zeigt Informationen zu diesem Bot.`)
-        //.addField(`${guildPrefix}changeprefix`, `Ändert den Prefix des Bots. Du benötigst die Berichtigung, den Server zu verwalten.`)
-        .addField(
-          `${guildPrefix}zufallszahl`,
-          `Erstellt eine Zufallszahl. Korrekte Benutzung: ${guildPrefix}zufallszahl <höchste Zahl> oder ${guildPrefix}zufallszahl <niedrigste Zahl> <höchste Zahl>`
-        )
-        .addField(
-          `${guildPrefix}collatz`,
-          `Berechnet die Collatz Kurve für die angegebene Zahl. Korrekte Benutzung: ${guildPrefix}collatz <Zahl von 1-30>`
-        )
-        .addField(
-          `${guildPrefix}katze`,
-          `Zeigt eine zufällige Katze von www.random.cat. an.`
-        )
-        .addField(`${guildPrefix}ping`, `Der Bot antwortet mit Pong.`)
-        //.addField(
-        //  `${guildPrefix}invite`,
-        //  `Shows the invite link for this bot.`
-        //)
-        //.addField(`${guildPrefix}serverinvite`, `Erstellt einen Serverinvite und schickt ihn per DM.`)
-        .addField(`${guildPrefix}stats`, `Zeigt ein paar Statistiken zum Bot.`);
-      msg.reply("", { embed: help });
-      break;
-    //case "serverinvite":
-    //  if (msg.guild && msg.member.hasPermission("CREATE_INSTANT_INVITE")) {
-    //    serverInvite(msg);
-    //    msg.reply("Sent you a DM!");
-    //  } else {
-    //    msg.reply("Sorry, but you don't have the permission to do that.");
-    //  }
-    //  break;
-    case "stats":
-      var seconds = process.uptime();
-      days = Math.floor(seconds / 86400);
-      seconds %= 86400;
-      hrs = Math.floor(seconds / 3600);
-      seconds %= 3600;
-      mins = Math.floor(seconds / 60);
-      secs = seconds % 60;
-      var uptime =
-        days +
-        " Tage, " +
-        hrs +
-        " Stunden, " +
-        mins +
-        " Minuten und " +
-        Math.round(secs) +
-        " Sekunden";
-
-      const stats = new Discord.MessageEmbed()
-        .setColor(randomColor())
-        .setTitle("Statistiken für den bits4kids-Bot:")
-        .setDescription(
-          `Hallo! Ich bin ein nützlicher Discord Bot, der vom Programmierer und Discord-Benutzer emeraldingg#2697 erstellt wurde. Mein aktueller Prefix ist ${guildPrefix}. Mit mir kannst du Katzenfotos bekommen, zufällige Zahlen erstellen und Blackjack spielen.\nIch hoffe du hast Spaß! Version: ${version}`
-        )
-        .setThumbnail(client.user.avatarURL())
-        .addField("Ersteller:", "emeraldingg#2697")
-        //.addField("Invite:", `[Click Here](${config.invite})`)
-        .addField("Anzahl an Servern", client.guilds.cache.size)
-        .addField("Kanäle", client.channels.cache.size)
-        .addField("Anzahl an Benutzern", client.users.cache.size)
-        .addField("Uptime", uptime)
-        .addField(
-          "RAM Benutzung",
-          Math.round(process.memoryUsage().rss / 1024 / 1024) + " MB"
-        );
-      msg.reply("", { embed: stats });
-      break;
-    case "announce":
-      if (config.owner.includes(msg.author.id)) {
-        if (!args[0]) return;
-        const text = args.join(" ");
-        let errorGuilds = [];
-        client.guilds.cache.forEach((guild) => {
-          const channel = findGoodChannel(guild);
-          if (channel) {
-            channel.send(text).catch(console.error);
-          } else {
-            errorGuilds.push(guild.name);
-          }
-        });
-        if (errorGuilds.length > 0) {
-          msg.reply(
-            `Could not announce to the following servers ${errorGuilds.join(
-              ", "
-            )}`
-          );
-        }
-      } else {
-        msg.author.send("Das darfst du nicht machen!");
-      }
-      break;
-    case "reboot":
-      if (config.owner.includes(msg.author.id)) {
-        msg.reply("Restarting!").then(function () {
-          console.log("Restarted by " + msg.author.tag);
-          process.exit(0);
-        });
-      } else {
-        msg.author.send("Das darfst du nicht machen!");
-      }
-      break;
-    case "refresh":
-    if (!msg.member.hasPermission("MANAGE_GUILD")) {
-      msg.author.send("Das darfst du nicht machen!");
-    } else {
-      refresh(msg);
-      msg.reply("Successfully refreshed the invites and files!");
-    }
-      break;
-    case "collatz":
-      if (isNaN(args[0])) {
-        msg.reply(`Korrekte Benutzung: ${guildPrefix}collatz <Zahl von 1-30>`);
-        break;
-      }
-      let number = parseFloat(args[0]).toFixed();
-      let ergebnis = Collatz(msg, number);
-      if (ergebnis == null) break;
-      const CollatzErgebnis = new Discord.MessageEmbed()
-        .setColor(randomColor())
-        .setTitle("Collatz Conjecture")
-        .setAuthor("Lothar Collatz", "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Lothar_Collatz_1984.jpg/457px-Lothar_Collatz_1984.jpg")
-        .setDescription("Das Collatz Problem ist ein Problem in der Mathematik: Ist die Startzahl gerade, wird mit der Hälfte davon weitergerechnet. Ist die Startzahl ungerade, wird sie mit 3 multipiziert und 1 addiert. Die Frage ist, ob dabei jede Zahl in der Schleife 4-2-1 ankommt.")
-        .setThumbnail(client.user.avatarURL())
-        .setURL("https://de.wikipedia.org/wiki/Collatz-Problem")
-        .addField(`Ergebnis:`, `Für die Zahl ${number} wurde eine Tiefe von ${ergebnis[0]} erreicht. Die höchste erreichte Zahl ist ${ergebnis[1]}.`)
-        .setTimestamp();
-      msg.reply(CollatzErgebnis);
-      break;
-    case "blackjack":
-      if (blackjackGames[msg.author.id]) {
-        if (args[0] && args[0] === "end") {
-          blackjackGames[msg.author.id].end();
-        } else {
-          msg.reply("Du spielst bereits Blackjack!");
-        }
-      } else {
-        if (!args[0]) {
-          blackjackGames[msg.author.id] = new Blackjack(msg, () => {
-          delete blackjackGames[msg.author.id];
-        });
-        blackjackGames[msg.author.id].start();
-        } else {
-          msg.reply("Falsche Benutzung!");
-        }
-      }
-      break;
+  const command = client.commands.get(cmd);
+  if(!command) return;
+  try {
+    command.execute(msg, args, client, guildPrefix, invites, fromWhere);
+  } catch (error) {
+    console.error(error);
+    msg.reply("There was an error trying to execute the command!");
+    const logChannel = utils.findLogChannel(msg);
+    logChannel?.send(`Error trying to execute command ${command.data.name} in channel ${msg.channel}. ${msg.guild.members.cache.get(config.author)}\nError: ${error}`)
   }
 });
 
+//Willkommensnachricht des Bots
 client.on("guildCreate", async (guild) => {
-  const channel = findGoodChannel(guild);
+  const channel = utils.findGoodChannel(guild);
   let guildPrefix = prefix.getPrefix(guild.id);
   if (!guildPrefix) guildPrefix = defaultPrefix;
   if (channel) {
@@ -776,109 +407,21 @@ client.on("guildCreate", async (guild) => {
       `Hallo! Ich bin ein nützlicher Discord Bot, der vom Programmierer und Discord-Benutzer emeraldingg#2697 erstellt wurde. Mein aktueller Prefix ist ${guildPrefix}. Mit mir kannst du Katzenfotos bekommen, zufällige Zahlen erstellen und Blackjack spielen.\nIch hoffe du hast Spaß! Version: ${version}`
       );
   }
+  guild.invites.fetch().then(guildInvites => {
+    invites[guild.id] = guildInvites;
+  });
 });
 
-client.login(config.tokenReal);
+client.login(config.tokenTest);
 
-function findGoodChannel(guild) {
-  return guild.channels.cache
-    .filter((channel) => {
-      if (channel.type !== "text") return false;
-      return channel
-        .permissionsFor(guild.me)
-        .has(Discord.Permissions.FLAGS.SEND_MESSAGES);
-    })
-    .first();
-}
-const inviteCodeReg = /^[a-z0-9]+$/i;
-
-function getInviteCode(inviteCode) {
-  inviteCode = inviteCode.replace("https://discord.gg/", "").replace("https://discordapp.com/invite/", "").replace("https://discord.com/invite/", "");
-  if (!inviteCodeReg.test(inviteCode)) return null;
-  return inviteCode;
-}
-
-function getRole(member, roleName) {
-  let role;
-  if (Number.isNaN(+roleName)) {
-    role = member.guild.roles.cache.find(role => role.name === roleName);
-  } else {
-    role = member.guild.roles.cache.find(role => role.id === roleName);
-  }
-  if (!role) return null;
-  return role;
-}
-
-function refresh(msg) {
-    msg.guild.fetchInvites().then(guildInvites => {
-      invites[msg.guild.id] = guildInvites;
-    });
-  connections = JSON.parse(fs.readFileSync("./connections.json", "utf8"));
-  buttons = JSON.parse(fs.readFileSync("./buttons.json", "utf8"));
-}
 
 function refreshFiles() {
   connections = JSON.parse(fs.readFileSync("./connections.json", "utf8"));
   buttons = JSON.parse(fs.readFileSync("./buttons.json", "utf8"));
 }
 
-function checkArrayEmpty(array) {
-  if (array.length === 0) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
-function findLogChannel(msg) {
-  let logChannel = msg.guild.channels.cache.find(channel => channel.name === "log");
-  if ((logChannel) && (((logChannel.permissionsFor(msg.guild.me).has("VIEW_CHANNEL")) == false) || ((logChannel.permissionsFor(msg.guild.me).has("SEND_MESSAGES")) == false))) {
-    logChannel = null;
-  }
-  return logChannel;
-}
-
-function Collatz (msg, number) {
-  if (number <= 0) {
-    msg.reply("Achtung! Nur postive Zahlen sind erlaubt.");
-    return null;
-  }
-  if (number > 30) {
-    msg.reply("Achtung! Aufgrund enormer Rechenleistung sind nur die natürlichen Zahlen von 1-30 erlaubt.");
-    return null;
-  }
-  let ergebnis = number;
-  let steps = 0;
-  let highest = 0;
-  
-  while (ergebnis > 1) {
-    if (ergebnis % 2 === 0) {
-      ergebnis = ergebnis / 2;
-    } else {
-      ergebnis = ergebnis * 3 + 1;
-    }
-    steps++;
-    if (ergebnis >= highest) {
-      highest = ergebnis;
-    }
-  }
-  let ergebnisse = [steps, highest]
-  return ergebnisse;
-}
-
-function randomColor() {
-  return Math.floor(Math.random() * 16777215);
-}
-function randomNumber(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-async function serverInvite(msg) {
-  let invite = await msg.channel.createInvite(
-    {
-      maxAge: 1800 * 1,
-      maxUses: 1,
-    },
-    `Requested by ${msg.author.tag}`
-  );
-  msg.author.send(invite ? `Here's your server invite: ${invite}` : "Error!");
+function refreshInvites(msg) {
+  msg.guild.invites.fetch().then(guildInvites => {
+    invites[msg.guild.id] = guildInvites;
+  });
 }
