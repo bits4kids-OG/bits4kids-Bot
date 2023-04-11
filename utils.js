@@ -6,8 +6,8 @@ exports.findGoodChannel = function(guild) {
         .filter((channel) => {
             if (channel.type !== "GUILD_TEXT") return false;
             return channel
-                .permissionsFor(guild.me)
-                .has(Discord.Permissions.FLAGS.SEND_MESSAGES);
+                .permissionsFor(guild.members.me)
+                .has(Discord.PermissionsBitField.Flags.SendMessages);
         })
         .first();
 };
@@ -49,7 +49,7 @@ exports.checkArrayEmpty = function(array) {
   
 exports.findLogChannel = function(msg) {
     let logChannel = msg.guild.channels.cache.find(channel => channel.name === "log");
-    if ((logChannel) && (((logChannel.permissionsFor(msg.guild.me).has(Discord.Permissions.FLAGS.VIEW_CHANNEL)) == false) || ((logChannel.permissionsFor(msg.guild.me).has(Discord.Permissions.FLAGS.SEND_MESSAGES)) == false))) {
+    if ((logChannel) && (((logChannel.permissionsFor(msg.guild.members.me).has(Discord.PermissionsBitField.Flags.ViewChannel)) == false) || ((logChannel.permissionsFor(msg.guild.members.me).has(Discord.PermissionsBitField.Flags.SendMessages)) == false))) {
         logChannel = null;
         const channel = findGoodChannel(msg.guild);
         if (channel) {
@@ -67,7 +67,7 @@ exports.findLogChannel = function(msg) {
 
 exports.findVoiceLogChannel = function(msg) {
     let VoiceLogChannel = msg.guild.channels.cache.find(channel => channel.name === "voicelog");
-    if ((VoiceLogChannel) && (((VoiceLogChannel.permissionsFor(msg.guild.me).has(Discord.Permissions.FLAGS.VIEW_CHANNEL)) == false) || ((VoiceLogChannel.permissionsFor(msg.guild.me).has(Discord.Permissions.FLAGS.SEND_MESSAGES)) == false))) {
+    if ((VoiceLogChannel) && (((VoiceLogChannel.permissionsFor(msg.guild.members.me).has(Discord.PermissionsBitField.Flags.ViewChannel)) == false) || ((VoiceLogChannel.permissionsFor(msg.guild.members.me).has(Discord.PermissionsBitField.Flags.SendMessages)) == false))) {
         VoiceLogChannel = null;
         const channel = findGoodChannel(msg.guild);
         if (channel) {
@@ -144,7 +144,7 @@ exports.Progressbar = function(value, maxValue, size) {
 
 exports.findChannel = function(msg, id) {
     let channel = msg.guild.channels.cache.get(id);
-    if ((channel) && (((channel.permissionsFor(msg.guild.me).has(Discord.Permissions.FLAGS.VIEW_CHANNEL)) == false) || ((channel.permissionsFor(msg.guild.me).has(Discord.Permissions.FLAGS.SEND_MESSAGES)) == false))) {
+    if ((channel) && (((channel.permissionsFor(msg.guild.members.me).has(Discord.PermissionsBitField.Flags.ViewChannel)) == false) || ((channel.permissionsFor(msg.guild.members.me).has(Discord.PermissionsBitField.Flags.SendMessages)) == false))) {
         channel = null;
         const sonstchannel = findGoodChannel(msg.guild);
         if (sonstchannel) {
@@ -207,7 +207,7 @@ exports.addBeginners = function(msg, user) {
     }
 };
 
-exports.getBeginners = function(msg, user) {
+exports.getBeginners = function(msg) {
     let beginners = {};
     if(fs.existsSync("./beginners.json")) {
         beginners = JSON.parse(fs.readFileSync("./beginners.json", "utf8"));
@@ -243,8 +243,8 @@ function findGoodChannel(guild) {
         .filter((channel) => {
             if (channel.type !== "GUILD_TEXT") return false;
             return channel
-                .permissionsFor(guild.me)
-                .has(Discord.Permissions.FLAGS.SEND_MESSAGES);
+                .permissionsFor(guild.members.me)
+                .has(Discord.PermissionsBitField.Flags.SendMessages);
         })
         .first();
 }

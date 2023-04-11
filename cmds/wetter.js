@@ -19,17 +19,19 @@ module.exports = {
             const fahrenheit = ((wetter.main.temp * 9) / 5 + 32).toFixed(2);
             const mph = (wetter.wind.speed * 2.23693629205).toFixed(1);
 
-            const embed = new Discord.MessageEmbed()
+            const embed = new Discord.EmbedBuilder()
                 .setColor(utils.randomColor())
                 .setTitle(`Wetter von ${wetter.name}, ${wetter.sys.country}:`)
                 .setDescription(wetter.weather[0].main)
                 .setThumbnail("https://openweathermap.org/img/w/${wetter.weather[0].icon}.png")
-                .addField("Weather Description", wetter.weather[0].description)
-                .addField("Temperature", `${wetter.main.temp} °C / ${fahrenheit} °F`)
-                .addField("Wind speed", `${wetter.wind.speed} meter/sec  /  ${mph} mph`)
-                .addField("Pressure", `${wetter.main.pressure} hPa`)
-                .addField("Humidity", `${wetter.main.humidity}%`)
-                .addField("Cloudiness", `${wetter.clouds.all}%`)
+                .addFields([
+                    { name: "Weather Description", value: wetter.weather[0].description },
+                    { name: "Temperature", value: `${wetter.main.temp} °C / ${fahrenheit} °F` },
+                    { name: "Wind speed", value: `${wetter.wind.speed} meter/sec  /  ${mph} mph` },
+                    { name: "Pressure", value: `${wetter.main.pressure} hPa` },
+                    { name: "Humidity", value: `${wetter.main.humidity}%` },
+                    { name: "Cloudiness", value: `${wetter.clouds.all}%` }
+                ])
                 .setTimestamp()
                 .setFooter({
                     text: "Data from OpenWeatherMap",

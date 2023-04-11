@@ -7,7 +7,7 @@ module.exports = {
         .setName("refresh")
         .setDescription("Refreshes the bot's files and invite links of the server."),
     execute(msg) {
-        if (!msg.member.permissions.has(Discord.Permissions.FLAGS.MANAGE_GUILD)) {
+        if (!msg.member.permissions.has(Discord.PermissionsBitField.Flags.ManageGuild)) {
             msg.author.send("Das darfst du nicht machen!");
         } else {
             utils.refresh(msg);

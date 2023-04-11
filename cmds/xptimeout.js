@@ -14,7 +14,7 @@ module.exports = {
         .setDescription("Restricts the pinged user from getting XP.")
         .setDefaultPermission(false),
     execute(msg, args, client, guildPrefix) {
-        if (!msg.member.permissions.has(Discord.Permissions.FLAGS.MANAGE_ROLES)) {
+        if (!msg.member.permissions.has(Discord.PermissionsBitField.Flags.ManageRoles)) {
             msg.author.send("Das darfst du nicht machen!");
             return;
         }

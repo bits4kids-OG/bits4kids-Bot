@@ -1,6 +1,5 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const Discord = require("discord.js");
-const fs = require("fs");
 const xp_levels = require("../xp-and-levels.js");
 
 const config = require("../config.json");
@@ -10,10 +9,8 @@ module.exports = {
         .setName("xp")
         .setDescription("Hiermit werden dir deine XP und dein Level angezeigt."),
     execute(msg, args, client) {
-        let XP = JSON.parse(fs.readFileSync("./xp.json", "utf8"));
-
         if(args[0] && msg.mentions.users.first()) {
-            if (!msg.member.permissions.has(Discord.Permissions.FLAGS.MANAGE_ROLES)) {
+            if (!msg.member.permissions.has(Discord.PermissionsBitField.Flags.ManageRoles)) {
                 msg.author.send("Das darfst du nicht machen!");
                 return;
             }

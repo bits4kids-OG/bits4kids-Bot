@@ -1,7 +1,7 @@
 const Discord = require("discord.js");
 
-const myIntents = new Discord.Intents();
-myIntents.add(Discord.Intents.FLAGS.GUILD_VOICE_STATES, Discord.Intents.FLAGS.DIRECT_MESSAGE_REACTIONS, Discord.Intents.FLAGS.GUILD_MEMBERS, Discord.Intents.FLAGS.DIRECT_MESSAGES, Discord.Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Discord.Intents.FLAGS.GUILD_MESSAGES, Discord.Intents.FLAGS.GUILD_INVITES, Discord.Intents.FLAGS.GUILD_MEMBERS, Discord.Intents.FLAGS.GUILDS);
+const myIntents = new Discord.IntentsBitField();
+myIntents.add(Discord.GatewayIntentBits.MessageContent, Discord.GatewayIntentBits.GuildVoiceStates, Discord.GatewayIntentBits.DirectMessageReactions, Discord.GatewayIntentBits.GuildMembers, Discord.GatewayIntentBits.DirectMessages, Discord.GatewayIntentBits.GuildMessageReactions, Discord.GatewayIntentBits.GuildMessages, Discord.GatewayIntentBits.GuildInvites, Discord.GatewayIntentBits.GuildMembers, Discord.GatewayIntentBits.Guilds);
 
 const client = new Discord.Client({ intents: myIntents });
 
@@ -311,7 +311,7 @@ client.on("voiceStateUpdate", (oldState, newState) => {
         const member = newState.member;
         const beginnerRole = utils.getRole(member, config.BeginnerRolle);
 
-        const beginners = utils.getBeginners(member, member.user);
+        const beginners = utils.getBeginners(member);
         const guildbeginners = beginners[member.guild.id];
 
         if(member.user.id in guildbeginners === false) return;
@@ -412,7 +412,7 @@ client.on("guildCreate", async (guild) => {
     });
 });
 
-client.login(config.tokenTest);
+client.login(config.tokenReal);
 
 
 function refreshFiles() {

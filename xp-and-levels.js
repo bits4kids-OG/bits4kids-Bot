@@ -62,7 +62,7 @@ exports.xpInfoScreen = function(msg, user) {
     const progressBar = utils.Progressbar(userXP.xp, xpToNextLevel, 24);
 
 
-    const xpErgebnis = new Discord.MessageEmbed()
+    const xpErgebnis = new Discord.EmbedBuilder()
         .setColor(utils.randomColor())
         .setTitle(`XP-Level von ${user.username}`)
         .setDescription("Für jede Nachricht, die du bei uns am Server schreibst, bekommst du XP. Mit genügend XP kannst du ein Level aufsteigen und dir so Badges verdienen. Falls du noch Fragen zum Level-System hast, frage eine/einen von unseren Trainerinnen/Trainern :)")
@@ -70,15 +70,17 @@ exports.xpInfoScreen = function(msg, user) {
 
     if(userXP.timeout >= Date.now()) {
         const timeoutDate = new Date(userXP.timeout);
-        xpErgebnis.addField("Timeout bis:", `${timeoutDate.toLocaleString("en-GB")}`);
+        xpErgebnis.addFields({ name: "Timeout bis:", value: `${timeoutDate.toLocaleString("en-GB")}` });
     }
 
-    xpErgebnis.addField("Derzeitiges Level:", userXP.level.toString())
-        .addField("Nächstes Level:", (userXP.level + 1).toString())
-        .addField("Derzeitige XP:", userXP.xp.toString())
-        .addField("Benötigte XP:", xpToNextLevel.toString())
-        .addField("Fehlende XP:", (xpToNextLevel - userXP.xp).toString())
-        .addField("ProgressBar:", progressBar)
+    xpErgebnis.addFields([
+        { name: "Derzeitiges Level:", value: userXP.level.toString() },
+        { name: "Nächstes Level:", value: (userXP.level + 1).toString() },
+        { name: "Derzeitige XP:", value: userXP.xp.toString() },
+        { name: "Benötigte XP:", value: xpToNextLevel.toString() },
+        { name: "Fehlende XP:", value: (xpToNextLevel - userXP.xp).toString() },
+        { name: "ProgressBar:", value: progressBar }
+    ])
         .setTimestamp();
     return xpErgebnis;
 };
@@ -104,18 +106,20 @@ function nextLevel(msg, user, guildPrefix) {
         fehlendeXP = xpToNextLevel - userXP.xp;
     }
 
-    const levelUp = new Discord.MessageEmbed()
+    const levelUp = new Discord.EmbedBuilder()
         .setColor(utils.randomColor())
         .setTitle(`${user.username} ist gerade ein Level aufgestiegen!`)
         .setDescription("Gratulation!")
         .setThumbnail(user.avatarURL())
-        .addField("Level-Up:", `${(userXP.level - 1).toString()} --> ${userXP.level}`)
-        .addField("Derzeitiges Level:", userXP.level.toString())
-        .addField("Nächstes Level:", (userXP.level + 1).toString())
-        .addField("Derzeitige XP:", userXP.xp.toString())
-        .addField("Benötigte XP:", xpToNextLevel.toString())
-        .addField("Fehlende XP:", fehlendeXP.toString())
-        .addField("ProgressBar:", progressBar)
+        .addFields([
+            { name: "Level-Up:", value: `${(userXP.level - 1).toString()} --> ${userXP.level}` },
+            { name: "Derzeitiges Level:", value: userXP.level.toString() },
+            { name: "Nächstes Level:", value: (userXP.level + 1).toString() },
+            { name: "Derzeitige XP:", value: userXP.xp.toString() },
+            { name: "Benötigte XP:", value: xpToNextLevel.toString() },
+            { name: "Fehlende XP:", value: fehlendeXP.toString() },
+            { name: "ProgressBar:", value: progressBar }
+        ])
         .setTimestamp();
 
     //console.log(Badges);
@@ -170,7 +174,7 @@ function nextLevel(msg, user, guildPrefix) {
 
     //console.log(badge);
 
-    const file = new Discord.MessageAttachment(badge);
+    const file = new Discord.AttachmentBuilder(badge);
 
     const channel = utils.findChannel(msg, config.xpChannel);
     channel?.send({ content: `Glückwunsch, ${user}`, embeds: [levelUp] })

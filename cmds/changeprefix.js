@@ -7,7 +7,7 @@ module.exports = {
         .setName("changeprefix")
         .setDescription("Changes the prefix for this server."),
     execute(msg, args, client, guildPrefix) {
-        if (!msg.member.permissions.has(Discord.Permissions.FLAGS.MANAGE_GUILD)) {
+        if (!msg.member.permissions.has(Discord.PermissionsBitField.Flags.ManageGuild)) {
             msg.author.send("Das darfst du nicht machen!");
         }
         else if (!args[0] || args[0] === "help") {

@@ -10,20 +10,20 @@ module.exports = {
         .setName("button")
         .setDescription("Tool for creating/managing buttons."),
     execute(msg, args, client, guildPrefix) {
-        if (!msg.member.permissions.has(Discord.Permissions.FLAGS.MANAGE_GUILD)) {
+        if (!msg.member.permissions.has(Discord.PermissionsBitField.Flags.ManageGuild)) {
             msg.author.send("Das darfst du nicht machen!");
             return;
         }
         
         refreshFiles();
+
+        let farben = ["Primary", "Secondary", "Success", "Danger", "Link"];
     
-        let farben = ["PRIMARY", "SECONDARY", "SUCCESS", "DANGER", "LINK"];
-    
-        if (!args[0] || !args[1] || !args[2] || !args[3] || (args[0] != "LINK" && !args[4])) {
+        if (!args[0] || !args[1] || !args[2] || !args[3] || (args[0] != "Link" && !args[4])) {
     
             if (args[0] === "list") {
                 msg.reply("Sent you a DM!");
-                const linkList = new Discord.MessageEmbed()
+                const linkList = new Discord.EmbedBuilder()
                     .setColor(utils.randomColor())
                     .setTitle("Diese Buttons und Rollen wurden verbunden:")
                     .setThumbnail(client.user.avatarURL());
@@ -40,13 +40,13 @@ module.exports = {
                     if(roleList === "") {
                         roleList = "No role connected!";
                     }
-                    linkList.addField(key, roleList);
+                    linkList.addFields({name: key, value: roleList});
                 }
     
                 if (utils.checkArrayEmpty(roleEmpty) == true) {
-                    linkList.addField("I found no connected elements", "in my Files!");
+                    linkList.addFields({ name: "I found no connected elements", value: "in my Files!"});
                 } else {
-                    linkList.addField(`I found ${roleEmpty.length} connected button(s)`, "in my Files!");
+                    linkList.addFields({ name: `I found ${roleEmpty.length} connected button(s)`, value: "in my Files!"});
                 }
     
                 msg.author.send({ embeds: [linkList] });
@@ -149,7 +149,7 @@ module.exports = {
     
         if (args[0] === "create") {
             if (!farben.includes(args[2])) {
-                msg.reply("This style is not supported! Correct Styles: PRIMARY, SECONDARY, SUCCESS, DANGER, LINK");
+                msg.reply("This style is not supported! Correct Styles: Primary, Secondary, Success, Danger, Link");
                 return;
             } else {
                 let buttonsID = args[1];
@@ -160,10 +160,10 @@ module.exports = {
                     .slice(4)
                     .join(" ");
       
-                const row = new Discord.MessageActionRow()
+                const row = new Discord.ActionRowBuilder()
                     .addComponents(
-                        new Discord.MessageButton()
-                            .setStyle(buttonsColor)
+                        new Discord.ButtonBuilder()
+                            .setStyle(Discord.ButtonStyle[buttonsColor])
                             .setCustomId(buttonsID)
                             .setLabel(buttonText)
                     );
@@ -211,17 +211,17 @@ module.exports = {
                 msg.reply(`Correct usage: ${guildPrefix}button create <id> <color> <text_on_button> <text in message> or ${guildPrefix}button <id> <desired role to connect> <color> <text_on_button> <text in message> or ${guildPrefix}button <id> <desired role to connect> connect or ${guildPrefix}button <id> unset or ${guildPrefix}button <id> <role> unset or ${guildPrefix}button url <desired link> <text_on_button> <text in message>`);
                 return;
             }
-            const row = new Discord.MessageActionRow()
+            const row = new Discord.ActionRowBuilder()
                 .addComponents(
-                    new Discord.MessageButton()
-                        .setStyle(buttonsColor)
+                    new Discord.ButtonBuilder()
+                        .setStyle(Discord.ButtonStyle[buttonsColor])
                         .setURL(buttonsID)
                         .setLabel(buttonText)
                 );
             msg.channel.send({ content: msgText, components: [row] });
     
         } else if (!farben.includes(args[2])) {
-            msg.reply("This style is not supported! Correct Styles: PRIMARY, SECONDARY, SUCCESS, DANGER, LINK");
+            msg.reply("This style is not supported! Correct Styles: Primary, Secondary, Success, Danger, Link");
             return;
         } else {
             let buttonsID = args[0];
@@ -237,10 +237,10 @@ module.exports = {
                 .slice(4)
                 .join(" ");
     
-            const row = new Discord.MessageActionRow()
+            const row = new Discord.ActionRowBuilder()
                 .addComponents(
-                    new Discord.MessageButton()
-                        .setStyle(buttonsColor)
+                    new Discord.ButtonBuilder()
+                        .setStyle(Discord.ButtonStyle[buttonsColor])
                         .setCustomId(buttonsID)
                         .setLabel(buttonText)
                 );

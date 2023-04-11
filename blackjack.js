@@ -37,8 +37,8 @@ module.exports = class Blackjack {
 
         this.editMsg = null;
         this.permissionManageMsg = msg.guild && msg.channel
-            .permissionsFor(msg.guild.me)
-            .has(Discord.Permissions.FLAGS.MANAGE_MESSAGES);
+            .permissionsFor(msg.guild.members.me)
+            .has(Discord.PermissionsBitField.Flags.ManageMessages);
         this.spielerKarten = [];
         this.dealerKarten = [];
         this.deck = [];
@@ -138,13 +138,8 @@ module.exports = class Blackjack {
     }
 
     options(reactMsg) {
-        let hit = false;
-        let blackjack = false;
-        let stand = false;
         let summe = this.score(this.spielerKarten);
         if (summe < 21) {
-            hit = true;
-            stand = true;
             reactMsg.react("➕");
             reactMsg.react("➖");
             const filter = (reaction, user) =>
@@ -180,7 +175,6 @@ module.exports = class Blackjack {
             });
         }
         if (summe === 21) {
-            blackjack = true;
             this.msg.reply("Kongratulation! Du hast einen Blackjack.");
             this.anzeigenDealer();
             this.end();

@@ -10,7 +10,7 @@ module.exports = {
     async execute(msg) {
         try {
             const catObj = await (await fetch("https://aws.random.cat/meow")).json();
-            const embed = new Discord.MessageEmbed()
+            const embed = new Discord.EmbedBuilder()
                 .setColor(utils.randomColor())
                 .setTitle("Katze")
                 .setImage(catObj.file)

@@ -8,19 +8,19 @@ module.exports = {
         .setDescription("Zeigt alle in der Datenbank hinterlegten Beginner.")
         .setDefaultPermission(false),
     async execute(msg, args, client) {
-        if (!msg.member.permissions.has(Discord.Permissions.FLAGS.MANAGE_ROLES)) {
+        if (!msg.member.permissions.has(Discord.PermissionsBitField.Flags.ManageRoles)) {
             msg.author.send("Das darfst du nicht machen!");
             return;
         }
 
         const exctDate = new Date();
 
-        const beginners = utils.getBeginners(msg, msg.user);
+        const beginners = utils.getBeginners(msg);
         const guildbeginners = beginners[msg.guild.id];
 
 
         msg.reply("Sent you a DM!\nThis process will take a few moments.");
-        const beginnerList = new Discord.MessageEmbed()
+        const beginnerList = new Discord.EmbedBuilder()
             .setColor(utils.randomColor())
             .setTitle("Folgenden Benutzer sind als Beginner in meiner Datenbank:\n(Manuell entfernte sind trotzdem für 4 Wochen gespeichert, Entfernung aus der Datenbank erfolgt bei Beitritt eines Coding Clubs!)")
             .setThumbnail(client.user.avatarURL());
@@ -53,9 +53,9 @@ module.exports = {
         }
 
         if (utils.checkArrayEmpty(beginnerEmpty) == true) {
-            beginnerList.addField("Keine hinterlegten Beginner", "für diesen Server!");
+            beginnerList.addFields({ name: "Keine hinterlegten Beginner", value: "für diesen Server!" });
         } else {
-            beginnerList.addField(`${beginnerEmpty.length} Beginner`, "in der Datenbank hinterlegt!");
+            beginnerList.addFields({ name: `${beginnerEmpty.length} Beginner`, value: "in der Datenbank hinterlegt!" });
             sendString = true;
         }
 
@@ -63,7 +63,7 @@ module.exports = {
         if(sendString == true) {
             // UTF-8 Byte Order Mark \xEF\xBB\xBF vor den Text geben, damit Excel die Datei richtig lädt
             const buffer = Buffer.concat([Buffer.from([0xEF, 0xBB, 0xBF]), Buffer.from(allUserString, "utf-8")]);
-            const attachment = new Discord.MessageAttachment(buffer, `${msg.guild.name}_beginners_${exctDate.toLocaleString("en-CA", { hour12: false }).replace(",", "").replaceAll(":","-")}.csv`);
+            const attachment = new Discord.AttachmentBuilder(buffer, { name: `${msg.guild.name}_beginners_${exctDate.toLocaleString("en-CA", { hour12: false }).replace(",", "").replaceAll(":","-")}.csv` });
             msg.author.send({
                 content: "File containing the data:\nPlease download and open the file in Excel.",
                 files: [attachment]

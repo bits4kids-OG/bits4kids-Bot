@@ -9,7 +9,7 @@ module.exports = {
         .setDescription("Zeigt die XP und Level von allen auf dem Server.")
         .setDefaultPermission(false),
     async execute(msg, args, client) {
-        if (!msg.member.permissions.has(Discord.Permissions.FLAGS.MANAGE_ROLES)) {
+        if (!msg.member.permissions.has(Discord.PermissionsBitField.Flags.ManageRoles)) {
             msg.author.send("Das darfst du nicht machen!");
             return;
         }
@@ -27,7 +27,7 @@ module.exports = {
 
 
         msg.reply("Sent you a DM!\nThis process will take a few minutes.");
-        const xpList = new Discord.MessageEmbed()
+        const xpList = new Discord.EmbedBuilder()
             .setColor(utils.randomColor())
             .setTitle("XP und Levels von folgenden Benutzern sind in meiner Datenbank:")
             .setThumbnail(client.user.avatarURL());
@@ -59,9 +59,9 @@ module.exports = {
         }
 
         if (utils.checkArrayEmpty(xpEmpty) == true) {
-            xpList.addField("Keine gespeicherten XP", "für diesen Server!");
+            xpList.addFields({ name: "Keine gespeicherten XP", value: "für diesen Server!" });
         } else {
-            xpList.addField(`${xpEmpty.length} Benutzer mit gespeicherten XP`, "in der Datenbank hinterlegt!");
+            xpList.addFields({ name: `${xpEmpty.length} Benutzer mit gespeicherten XP`, value: "in der Datenbank hinterlegt!" });
             sendString = true;
         }
 
@@ -69,7 +69,7 @@ module.exports = {
         if(sendString == true) {
             // UTF-8 Byte Order Mark \xEF\xBB\xBF vor den Text geben, damit Excel die Datei richtig lädt
             const buffer = Buffer.concat([Buffer.from([0xEF, 0xBB, 0xBF]), Buffer.from(allUserString, "utf-8")]);
-            const attachment = new Discord.MessageAttachment(buffer, `${msg.guild.name}_xp_${exctDate.toLocaleString("en-CA", { hour12: false }).replace(",", "").replaceAll(":","-")}.csv`);
+            const attachment = new Discord.AttachmentBuilder(buffer, { name: `${msg.guild.name}_xp_${exctDate.toLocaleString("en-CA", { hour12: false }).replace(",", "").replaceAll(":","-")}.csv` });
             msg.author.send({
                 content: "File containing the data:\nPlease download and open the file in Excel.",
                 files: [attachment]

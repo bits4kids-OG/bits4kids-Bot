@@ -14,7 +14,7 @@ module.exports = {
         let number = parseFloat(args[0]).toFixed();
         let ergebnis = utils.Collatz(msg, number);
         if (ergebnis == null) return;
-        const CollatzErgebnis = new Discord.MessageEmbed()
+        const CollatzErgebnis = new Discord.EmbedBuilder()
             .setColor(utils.randomColor())
             .setTitle("Collatz Conjecture")
             .setAuthor({
@@ -24,7 +24,9 @@ module.exports = {
             .setDescription("Das Collatz Problem ist ein Problem in der Mathematik: Ist die Startzahl gerade, wird mit der Hälfte davon weitergerechnet. Ist die Startzahl ungerade, wird sie mit 3 multipiziert und 1 addiert. Die Frage ist, ob dabei jede Zahl in der Schleife 4-2-1 ankommt.")
             .setThumbnail(client.user.avatarURL())
             .setURL("https://de.wikipedia.org/wiki/Collatz-Problem")
-            .addField("Ergebnis:", `Für die Zahl ${number} wurde eine Tiefe von ${ergebnis[0]} erreicht. Die höchste erreichte Zahl ist ${ergebnis[1]}.`)
+            .addFields([
+                { name: "Ergebnis:", value: `Für die Zahl ${number} wurde eine Tiefe von ${ergebnis[0]} erreicht. Die höchste erreichte Zahl ist ${ergebnis[1]}.` }
+            ])
             .setTimestamp();
         msg.reply({ embeds: [CollatzErgebnis] });
     },

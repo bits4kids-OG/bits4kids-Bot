@@ -9,7 +9,7 @@ module.exports = {
         .setDescription("Used for allowing users to see the GameJam Channel.")
         .setDefaultPermission(false),
     execute(msg, args, client, guildPrefix) {
-        if (!msg.member.permissions.has(Discord.Permissions.FLAGS.MANAGE_ROLES)) {
+        if (!msg.member.permissions.has(Discord.PermissionsBitField.Flags.ManageRoles)) {
             msg.author.send("Das darfst du nicht machen!");
             return;
         }
@@ -45,20 +45,20 @@ module.exports = {
 
         function findGamejamChannel(msg, id) {
             let channel = msg.guild.channels.cache.get(id);
-            if ((channel) && (((channel.permissionsFor(msg.guild.me).has(Discord.Permissions.FLAGS.VIEW_CHANNEL)) == false) || ((channel.permissionsFor(msg.guild.me).has(Discord.Permissions.FLAGS.MANAGE_ROLES)) == false))) {
-			  channel = null;
-			  const sonstchannel = utils.findLogChannel(msg.guild);
-			  if (sonstchannel) {
+            if ((channel) && (((channel.permissionsFor(msg.guild.members.me).has(Discord.PermissionsBitField.Flags.ViewChannel)) == false) || ((channel.permissionsFor(msg.guild.members.me).has(Discord.PermissionsBitField.Flags.ManageRoles)) == false))) {
+                channel = null;
+                const sonstchannel = utils.findLogChannel(msg.guild);
+                if (sonstchannel) {
                     sonstchannel.send("I don't have the permission to edit the permissions of the GameJam channel!");
-			  }
+                }
             }
             if (!channel) {
-			  const sonstchannel = utils.findLogChannel(msg.guild);
-			  if (sonstchannel) {
+                const sonstchannel = utils.findLogChannel(msg.guild);
+                if (sonstchannel) {
                     sonstchannel.send("GameJam channel not found!");
-			  }
+                }
             }
             return channel;
-		  }
+        }
     },
 };

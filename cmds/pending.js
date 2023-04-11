@@ -9,12 +9,12 @@ module.exports = {
         .setDefaultPermission(false),
     async execute(msg, args, client, guildPrefix, invites, fromWhere) {
         const guildMember = fromWhere[msg.guild.id];
-        if (!msg.member.permissions.has(Discord.Permissions.FLAGS.MANAGE_GUILD)) {
+        if (!msg.member.permissions.has(Discord.PermissionsBitField.Flags.ManageGuild)) {
             msg.author.send("Das darfst du nicht machen!");
             return;
         }
         msg.reply("Sent you a DM!");
-        const linkList = new Discord.MessageEmbed()
+        const linkList = new Discord.EmbedBuilder()
             .setColor(utils.randomColor())
             .setTitle("These members are still pending:")
             .setThumbnail(client.user.avatarURL());
@@ -25,14 +25,16 @@ module.exports = {
             const member = await client.users.fetch(key).catch(console.error);
             listEmpty.push(key);
             let memberList = guildMember[key];
-            linkList.addField("Member:", member.tag);
-            linkList.addField("Invite used:", "https://discord.gg/" + memberList);
+            linkList.addFields([
+                { name: "Member:", value: member.tag },
+                { name: "Invite used:", value: "https://discord.gg/" + memberList }
+            ]);
         }
 
         if (utils.checkArrayEmpty(listEmpty) == true) {
-            linkList.addField("There were no", "pending users!");
+            linkList.addFields({ name: "There were no", value: "pending users!" });
         } else {
-            linkList.addField(`I found ${listEmpty.length}`, "pedning users!");
+            linkList.addFields({ name: `I found ${listEmpty.length}`, value: "pending users!" });
         }
 
         msg.author.send({ embeds: [linkList] });

@@ -10,14 +10,14 @@ module.exports = {
         .setName("inviteconnect")
         .setDescription("Tool to create/manage invite Links that will be assigned to a role"),
     execute(msg, args, client, guildPrefix, invites) {
-        if (!msg.member.permissions.has(Discord.Permissions.FLAGS.MANAGE_GUILD)) {
+        if (!msg.member.permissions.has(Discord.PermissionsBitField.Flags.ManageGuild)) {
             msg.author.send("Das darfst du nicht machen!");
         } else if (!args[0] || !args[1] || utils.getInviteCode(args[0]) == null) {
             refresh(msg);
     
             if (args[0] === "list") {
                 msg.reply("Sent you a DM!");
-                const linkList = new Discord.MessageEmbed()
+                const linkList = new Discord.EmbedBuilder()
                     .setColor(utils.randomColor())
                     .setTitle("Diese Invites und Rollen wurden verbunden:")
                     .setThumbnail(client.user.avatarURL());
@@ -34,13 +34,13 @@ module.exports = {
                     if(roleList === "") {
                         roleList = "No role connected!";
                     }
-                    linkList.addField("https://discord.gg/" + key + ":", roleList);
+                    linkList.addFields({ name: "https://discord.gg/" + key + ":", value: roleList });
                 }
     
                 if (utils.checkArrayEmpty(roleEmpty) == true) {
-                    linkList.addField("I found no connected elements", "in my Files!");
+                    linkList.addFields({ name: "I found no connected elements", value: "in my Files!" });
                 } else {
-                    linkList.addField(`I found ${roleEmpty.length} connected Link(s)`, "in my Files!");
+                    linkList.addFields({ name: `I found ${roleEmpty.length} connected Link(s)`, value: "in my Files!" });
                 }
     
                 msg.author.send({ embeds: [linkList] });
