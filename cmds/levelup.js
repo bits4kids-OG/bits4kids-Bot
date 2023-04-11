@@ -1,18 +1,18 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder } = require("@discordjs/builders");
 const Discord = require("discord.js");
 
 const xp_levels = require("../xp-and-levels.js");
 const config = require("../config.json");
-const utils = require('../utils.js');
+const utils = require("../utils.js");
 
 const fs = require("fs");
 
 module.exports = {
-	data: new SlashCommandBuilder()
-		.setName("levelup")
-		.setDescription("Lifts the user's xp-level.")
+    data: new SlashCommandBuilder()
+        .setName("levelup")
+        .setDescription("Lifts the user's xp-level.")
         .setDefaultPermission(false),
-	execute(msg, args, client, guildPrefix) {
+    execute(msg, args, client, guildPrefix) {
         if (!msg.member.permissions.has(Discord.Permissions.FLAGS.MANAGE_ROLES)) {
             msg.author.send("Das darfst du nicht machen!");
             return;
@@ -31,24 +31,24 @@ module.exports = {
             const orgRole = msg.guild.roles.cache.find(r => r.id === config.OrganisationRolle);
             const member = msg.guild.members.cache.get(user.id);
             if ((trainRole) && (orgRole) && (member.roles) && ((member.roles.cache.has(trainRole.id)) || (member.roles.cache.has(orgRole.id)))) {
-              msg.reply("Error: Trainer:innen können keine XP besitzen.");
-              return;
+                msg.reply("Error: Trainer:innen können keine XP besitzen.");
+                return;
             }
 
-        const XP = utils.getXP(msg, user);
-        const userXP = XP[msg.guild.id][user.id];
+            const XP = utils.getXP(msg, user);
+            const userXP = XP[msg.guild.id][user.id];
 
-        userXP.level++;
-        userXP.last_message = Date.now();
+            userXP.level++;
+            userXP.last_message = Date.now();
         
-        fs.writeFileSync("./xp.json", JSON.stringify(XP, null, 2), err => {
-            if(err) console.log(err)
-        });
+            fs.writeFileSync("./xp.json", JSON.stringify(XP, null, 2), err => {
+                if(err) console.log(err);
+            });
 
-        xp_levels.levelUp(msg, user, guildPrefix);
-        msg.reply(`${user} wurde auf das nächste Level ${userXP.level} gesetzt!`);
+            xp_levels.levelUp(msg, user, guildPrefix);
+            msg.reply(`${user} wurde auf das nächste Level ${userXP.level} gesetzt!`);
 
-    }
+        }
     
-	},
+    },
 };

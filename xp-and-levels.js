@@ -1,5 +1,5 @@
 const Discord = require("discord.js");
-const utils = require('./utils.js');
+const utils = require("./utils.js");
 const config = require("./config.json");
 
 const fs = require("fs");
@@ -35,7 +35,7 @@ exports.addXP = function(msg, user, number, guildPrefix) {
     userXP.xp += number;
     userXP.last_message = Date.now();
     
-//Level
+    //Level
 
     let xpToNextLevel = LvlAlg(userXP.level);
     while(userXP.xp >= xpToNextLevel) {
@@ -43,14 +43,14 @@ exports.addXP = function(msg, user, number, guildPrefix) {
         userXP.xp = userXP.xp - xpToNextLevel;
         xpToNextLevel = LvlAlg(userXP.level);
         fs.writeFileSync("./xp.json", JSON.stringify(XP, null, 2), err => {
-            if(err) console.log(err)
+            if(err) console.log(err);
         });
         nextLevel(msg, user, guildPrefix);
     }
     fs.writeFileSync("./xp.json", JSON.stringify(XP, null, 2), err => {
-        if(err) console.log(err)
+        if(err) console.log(err);
     });
-}
+};
 
 //Abfrage nach XP durch den Benutzer
 
@@ -68,26 +68,26 @@ exports.xpInfoScreen = function(msg, user) {
         .setDescription("Für jede Nachricht, die du bei uns am Server schreibst, bekommst du XP. Mit genügend XP kannst du ein Level aufsteigen und dir so Badges verdienen. Falls du noch Fragen zum Level-System hast, frage eine/einen von unseren Trainerinnen/Trainern :)")
         .setThumbnail(user.avatarURL());
 
-            if(userXP.timeout >= Date.now()) {
-                const timeoutDate = new Date(userXP.timeout)
-                xpErgebnis.addField(`Timeout bis:`, `${timeoutDate.toLocaleString("en-GB")}`);
-            }
+    if(userXP.timeout >= Date.now()) {
+        const timeoutDate = new Date(userXP.timeout);
+        xpErgebnis.addField("Timeout bis:", `${timeoutDate.toLocaleString("en-GB")}`);
+    }
 
-        xpErgebnis.addField(`Derzeitiges Level:`, userXP.level.toString())
-        .addField(`Nächstes Level:`, (userXP.level + 1).toString())
-        .addField(`Derzeitige XP:`, userXP.xp.toString())
-        .addField(`Benötigte XP:`, xpToNextLevel.toString())
-        .addField(`Fehlende XP:`, (xpToNextLevel - userXP.xp).toString())
-        .addField(`ProgressBar:`, progressBar)
+    xpErgebnis.addField("Derzeitiges Level:", userXP.level.toString())
+        .addField("Nächstes Level:", (userXP.level + 1).toString())
+        .addField("Derzeitige XP:", userXP.xp.toString())
+        .addField("Benötigte XP:", xpToNextLevel.toString())
+        .addField("Fehlende XP:", (xpToNextLevel - userXP.xp).toString())
+        .addField("ProgressBar:", progressBar)
         .setTimestamp();
     return xpErgebnis;
-}
+};
 
 //Gratulation bei Level-Up
 
 exports.levelUp = function(msg, user, guildPrefix) {
     nextLevel(msg, user, guildPrefix);
-}
+};
 
 function nextLevel(msg, user, guildPrefix) {
     const userXP = utils.getXP(msg, user)[msg.guild.id][user.id];
@@ -105,22 +105,22 @@ function nextLevel(msg, user, guildPrefix) {
     }
 
     const levelUp = new Discord.MessageEmbed()
-    .setColor(utils.randomColor())
-    .setTitle(`${user.username} ist gerade ein Level aufgestiegen!`)
-    .setDescription("Gratulation!")
-    .setThumbnail(user.avatarURL())
-    .addField(`Level-Up:`, `${(userXP.level - 1).toString()} --> ${userXP.level}`)
-    .addField(`Derzeitiges Level:`, userXP.level.toString())
-    .addField(`Nächstes Level:`, (userXP.level + 1).toString())
-    .addField(`Derzeitige XP:`, userXP.xp.toString())
-    .addField(`Benötigte XP:`, xpToNextLevel.toString())
-    .addField(`Fehlende XP:`, fehlendeXP.toString())
-    .addField(`ProgressBar:`, progressBar)
-    .setTimestamp();
+        .setColor(utils.randomColor())
+        .setTitle(`${user.username} ist gerade ein Level aufgestiegen!`)
+        .setDescription("Gratulation!")
+        .setThumbnail(user.avatarURL())
+        .addField("Level-Up:", `${(userXP.level - 1).toString()} --> ${userXP.level}`)
+        .addField("Derzeitiges Level:", userXP.level.toString())
+        .addField("Nächstes Level:", (userXP.level + 1).toString())
+        .addField("Derzeitige XP:", userXP.xp.toString())
+        .addField("Benötigte XP:", xpToNextLevel.toString())
+        .addField("Fehlende XP:", fehlendeXP.toString())
+        .addField("ProgressBar:", progressBar)
+        .setTimestamp();
 
     //console.log(Badges);
 
-//Badge-System
+    //Badge-System
     //Hinzufügen
     let badge = "";
     let addedRole;
@@ -128,44 +128,44 @@ function nextLevel(msg, user, guildPrefix) {
     if(userXP.level === Lvl150Lvl) {
         badge = "./badges/" + Badges[5];
 
-            let role = utils.getRole(msg.member, Lvl150Role);
-            if(role) msg.member.roles.add(role);
-            addedRole = role;
+        let role = utils.getRole(msg.member, Lvl150Role);
+        if(role) msg.member.roles.add(role);
+        addedRole = role;
 
     } else if(userXP.level === Lvl100Lvl) {
         badge = "./badges/" + Badges[4];
 
-            let role = utils.getRole(msg.member, Lvl100Role);
-            if(role) msg.member.roles.add(role);
-            addedRole = role;
+        let role = utils.getRole(msg.member, Lvl100Role);
+        if(role) msg.member.roles.add(role);
+        addedRole = role;
 
     } else if(userXP.level === Lvl50Lvl) {
         badge = "./badges/" + Badges[3];
 
-            let role = utils.getRole(msg.member, Lvl50Role);
-            if(role) msg.member.roles.add(role);
-            addedRole = role;
+        let role = utils.getRole(msg.member, Lvl50Role);
+        if(role) msg.member.roles.add(role);
+        addedRole = role;
 
     } else if(userXP.level === Lvl20Lvl) {
         badge = "./badges/" + Badges[2];
 
-            let role = utils.getRole(msg.member, Lvl20Role);
-            if(role) msg.member.roles.add(role);
-            addedRole = role;
+        let role = utils.getRole(msg.member, Lvl20Role);
+        if(role) msg.member.roles.add(role);
+        addedRole = role;
 
     } else if(userXP.level === Lvl10Lvl) {
         badge = "./badges/" + Badges[1];
 
-            let role = utils.getRole(msg.member, Lvl10Role);
-            if(role) msg.member.roles.add(role);
-            addedRole = role;
+        let role = utils.getRole(msg.member, Lvl10Role);
+        if(role) msg.member.roles.add(role);
+        addedRole = role;
 
     } else if(userXP.level === Lvl5Lvl) {
         badge = "./badges/" + Badges[0];
 
-            let role = utils.getRole(msg.member, Lvl5Role);
-            if(role) msg.member.roles.add(role);
-            addedRole = role.name;
+        let role = utils.getRole(msg.member, Lvl5Role);
+        if(role) msg.member.roles.add(role);
+        addedRole = role.name;
     }
 
     //console.log(badge);
@@ -174,15 +174,15 @@ function nextLevel(msg, user, guildPrefix) {
 
     const channel = utils.findChannel(msg, config.xpChannel);
     channel?.send({ content: `Glückwunsch, ${user}`, embeds: [levelUp] })
-    .then(() => {
-        if(utils.checkArrayEmpty(badge)) return;
+        .then(() => {
+            if(utils.checkArrayEmpty(badge)) return;
 
-        channel?.send({
-            content: `Tolle Leistung, ${user}! Du hast gerade ein Badge und die Rolle ${addedRole} bekommen! Rufe deine Badges mit ${guildPrefix}badges ab.`,
-            //embeds: [badgeEarned],
-            files: [file]
+            channel?.send({
+                content: `Tolle Leistung, ${user}! Du hast gerade ein Badge und die Rolle ${addedRole} bekommen! Rufe deine Badges mit ${guildPrefix}badges ab.`,
+                //embeds: [badgeEarned],
+                files: [file]
+            });
         });
-    });
 }
 
 function LvlAlg(lvl) {
@@ -223,7 +223,7 @@ exports.earnedBadges = function(msg, user) {
     }
 
     return earnedBadges;
-}
+};
 
 exports.nextBadge = function(msg, user) {
     const userXP = utils.getXP(msg, user)[msg.guild.id][user.id];
@@ -254,6 +254,6 @@ exports.nextBadge = function(msg, user) {
         level = Lvl5Lvl;
     }
 
-    let nextBadgeLevel = [nextBadge, level]
+    let nextBadgeLevel = [nextBadge, level];
     return nextBadgeLevel;
-}
+};
