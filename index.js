@@ -20,6 +20,8 @@ let buttons = JSON.parse(fs.readFileSync("./buttons.json", "utf8"));
 const invites = {};
 let fromWhere = {};
 
+let voicelogUsers = {};
+
 let defaultPrefix = config.defaultPrefix;
 
 
@@ -45,7 +47,28 @@ client.on("ready", () => {
             invites[guild.id] = guildInvites;
         });
     });
+    
+    //Check VoiceLogRecovery
+    voicelogUsers = utils.getVoicelogRecovery();
+    Object.keys(voicelogUsers).forEach(async guildId => {
+        const guild = await client.guilds.fetch(guildId);
+        for(const user in voicelogUsers[guildId]) {
+            const member = await guild.members.fetch(user);
+            if((!member.voice.channel) || ((!member.voice.channel.name.toLowerCase().includes(config.Meetingräume)))) {
+                const now = Date.now();
+                const duration = now - voicelogUsers[guildId][user].joined;
+                const duration_string = utils.msToTime(duration);
+                const Zeit = new Date().toLocaleString("en-GB");
+                const VoiceLogChannel = utils.findVoiceLogChannel(guild);
 
+                VoiceLogChannel?.send(`${member} has left a OCC voice channel during bot downtime.\nTime: ${Zeit}\nUser was in the channel for at most ${duration_string}`);
+                delete(voicelogUsers[guildId][user]);
+            }
+        }
+        fs.writeFileSync("./voicelogRecovery.json", JSON.stringify(voicelogUsers, null, 2), err => {
+            if(err) console.log(err);
+        });
+    });
 });
 
 //automatisches Refreshen der Invites, bei Hinzufügen/Entfernen
@@ -296,20 +319,16 @@ client.on("voiceStateUpdate", (oldState, newState) => {
     if ((newState.channel) && (oldState.channel) && (newState.channel.id === oldState.channel.id)) return;
 
     const Zeit = new Date().toLocaleString("en-GB");
+    const VoiceLogChannel = utils.findVoiceLogChannel(newState.guild);
   
     if ((newState.channel) && (!oldState.channel)) {
-        if(!newState.channel.name.includes(config.Meetingräume)) return;
-        const VoiceLogChannel = utils.findVoiceLogChannel(newState);
-        VoiceLogChannel?.send(`${newState.member} has joined the voice channel "${newState.channel.name}".\nTime: ${Zeit}`);
+        if(!newState.channel.name.toLowerCase().includes(config.Meetingräume)) return;
+
+        voicelogUsers = utils.addVoicelogRecovery(newState.guild, newState.member.user);
 
         //Beginner Mode Check
-        const minute = 1000 * 60;
-        const hour = minute * 60;
-        const day = hour * 24;
-        const week = day * 7;
 
         const member = newState.member;
-        const beginnerRole = utils.getRole(member, config.BeginnerRolle);
 
         const beginners = utils.getBeginners(member);
         const guildbeginners = beginners[member.guild.id];
@@ -318,7 +337,13 @@ client.on("voiceStateUpdate", (oldState, newState) => {
 
         const userBeginner = beginners[member.guild.id][member.user.id];
 
+        const minute = 1000 * 60;
+        const hour = minute * 60;
+        const day = hour * 24;
+        const week = day * 7;
+
         if((userBeginner.joined) && ((Date.now() - userBeginner.joined) >= 4*week)) {
+            const beginnerRole = utils.getRole(member, config.BeginnerRolle);
             if(beginnerRole && member.roles.cache.has(beginnerRole) == true) {
                 member.roles.remove(beginnerRole);
             }
@@ -329,14 +354,18 @@ client.on("voiceStateUpdate", (oldState, newState) => {
             });
         }
 
-    }/* else if ((!newState.channel) && (oldState.channel)) {
-    if(!oldState.channel.name.includes(config.Meetingräume)) return;
-    VoiceLogChannel?.send(`${newState.member} has left the voice channel "${oldState.channel.name}".\nTime: ${Zeit}`);
-  }*/ else if ((newState.channel) && (oldState.channel)) {
+    } else if ((!newState.channel) && (oldState.channel)) {
+        if(!oldState.channel.name.toLowerCase().includes(config.Meetingräume)) return;
+        const member = newState.member;
+        voicelogLeftChannel(member, newState, oldState, Zeit, VoiceLogChannel);
+
+    } else if ((newState.channel) && (oldState.channel)) {
         if (newState.channel.id !== oldState.channel.id) {
-            if(!newState.channel.name.includes(config.Meetingräume)) return;
-            const VoiceLogChannel = utils.findVoiceLogChannel(newState);
-            VoiceLogChannel?.send(`${newState.member} switched from voice channel "${oldState.channel.name}" to "${newState.channel.name}".\nTime: ${Zeit}`);
+            if((!newState.channel.name.toLowerCase().includes(config.Meetingräume)) && (oldState.channel.name.toLowerCase().includes(config.Meetingräume))) {
+                voicelogLeftChannel(newState.member, newState, oldState, Zeit, VoiceLogChannel);
+            } else if((newState.channel.name.toLowerCase().includes(config.Meetingräume)) && (!oldState.channel.name.toLowerCase().includes(config.Meetingräume))) {
+                voicelogUsers = utils.addVoicelogRecovery(newState.guild, newState.member.user);
+            }
         }
     }
 
@@ -414,6 +443,24 @@ client.on("guildCreate", async (guild) => {
 
 client.login(config.tokenReal);
 
+
+function voicelogLeftChannel(member, newState, oldState, Zeit, VoiceLogChannel) {
+    const guildVoicelogUsers = voicelogUsers[member.guild.id];
+    if(member.user.id in guildVoicelogUsers === false) {
+        VoiceLogChannel?.send(`${newState.member} has left the voice channel ${oldState.channel}.\nUser was not among the observed users, therefore no duration can be displayed.\nTime: ${Zeit}`);
+        return;
+    }
+    const userVoicelogUsers = voicelogUsers[member.guild.id][member.user.id];
+    const now = Date.now();
+    const duration = now - userVoicelogUsers.joined;
+    const duration_string = utils.msToTime(duration);
+    VoiceLogChannel?.send(`${newState.member} has left the voice channel ${oldState.channel}.\nTime: ${Zeit}\nUser was in the channel for ${duration_string}`);
+    delete(voicelogUsers[member.guild.id][member.user.id]);
+
+    fs.writeFileSync("./voicelogRecovery.json", JSON.stringify(voicelogUsers, null, 2), err => {
+        if(err) console.log(err);
+    });
+}
 
 function refreshFiles() {
     connections = JSON.parse(fs.readFileSync("./connections.json", "utf8"));

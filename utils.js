@@ -65,17 +65,17 @@ exports.findLogChannel = function(msg) {
     return logChannel;
 };
 
-exports.findVoiceLogChannel = function(msg) {
-    let VoiceLogChannel = msg.guild.channels.cache.find(channel => channel.name === "voicelog");
-    if ((VoiceLogChannel) && (((VoiceLogChannel.permissionsFor(msg.guild.members.me).has(Discord.PermissionsBitField.Flags.ViewChannel)) == false) || ((VoiceLogChannel.permissionsFor(msg.guild.members.me).has(Discord.PermissionsBitField.Flags.SendMessages)) == false))) {
+exports.findVoiceLogChannel = function(guild) {
+    let VoiceLogChannel = guild.channels.cache.find(channel => channel.name === "voicelog");
+    if ((VoiceLogChannel) && (((VoiceLogChannel.permissionsFor(guild.members.me).has(Discord.PermissionsBitField.Flags.ViewChannel)) == false) || ((VoiceLogChannel.permissionsFor(guild.members.me).has(Discord.PermissionsBitField.Flags.SendMessages)) == false))) {
         VoiceLogChannel = null;
-        const channel = findGoodChannel(msg.guild);
+        const channel = findGoodChannel(guild);
         if (channel) {
             channel.send("Please set up a channel named voicelog!");
         }
     }
     if (!VoiceLogChannel) {
-        const channel = findGoodChannel(msg.guild);
+        const channel = findGoodChannel(guild);
         if (channel) {
             channel.send("Please set up a channel named voicelog!");
         }
@@ -221,6 +221,53 @@ exports.getBeginners = function(msg) {
     }
 
     return beginners;
+};
+
+
+exports.addVoicelogRecovery = function(guild, user) {
+    let voicelogUsers = {};
+    if(fs.existsSync("./voicelogRecovery.json")) {
+        voicelogUsers = JSON.parse(fs.readFileSync("./voicelogRecovery.json", "utf8"));
+    }
+  
+    if(guild.id in voicelogUsers === false) {
+        voicelogUsers[guild.id] = {};
+    }
+    const guildVoicelogUsers = voicelogUsers[guild.id];
+    if(user.id in guildVoicelogUsers === false) {
+        guildVoicelogUsers[user.id] = {
+            joined: 0
+        };
+    }
+    const userVoicelogUsers = guildVoicelogUsers[user.id];
+    userVoicelogUsers.joined = Date.now();
+
+    fs.writeFileSync("./voicelogRecovery.json", JSON.stringify(voicelogUsers, null, 2), err => {
+        if(err) console.log(err);
+    });
+
+    return voicelogUsers;
+};
+
+exports.getVoicelogRecovery = function() {
+    let voicelogUsers = {};
+    if(fs.existsSync("./voicelogRecovery.json")) {
+        voicelogUsers = JSON.parse(fs.readFileSync("./voicelogRecovery.json", "utf8"));
+    }
+    return voicelogUsers;
+};
+
+exports.msToTime = function(duration) {
+    var //milliseconds = Math.floor((duration % 1000) / 100),
+        seconds = Math.floor((duration / 1000) % 60),
+        minutes = Math.floor((duration / (1000 * 60)) % 60),
+        hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
+
+    hours = (hours < 10) ? "0" + hours : hours;
+    minutes = (minutes < 10) ? "0" + minutes : minutes;
+    seconds = (seconds < 10) ? "0" + seconds : seconds;
+
+    return hours + ":" + minutes + ":" + seconds;
 };
 
 
