@@ -62,7 +62,7 @@ module.exports = {
                 { name: `${guildPrefix}about`, value: "Zeigt Informationen zu diesem Bot." },
                 { name: `${guildPrefix}zufallszahl`, value: `Erstellt eine Zufallszahl. Korrekte Benutzung: ${guildPrefix}zufallszahl <höchste Zahl> oder ${guildPrefix}zufallszahl <niedrigste Zahl> <höchste Zahl>` },
                 { name: `${guildPrefix}collatz`, value: `Berechnet die Collatz Kurve für die angegebene Zahl. Korrekte Benutzung: ${guildPrefix}collatz <Zahl von 1-30>` },
-                { name: `${guildPrefix}katze`, value: "Zeigt eine zufällige Katze von www.random.cat. an." },
+                { name: `${guildPrefix}katze`, value: `Zeigt eine zufällige Katze von www.cataas.com an.\nMit ${guildPrefix}katze <text> wird eine Katze mit einer Caption angezeigt. Bsp: ${guildPrefix}katze Guten Morgen!` },
                 { name: `${guildPrefix}ping`, value: "Der Bot antwortet mit Pong." },
                 { name: `${guildPrefix}wetter`, value: `Der Bot zeigt das Wetter für den angegebenen Standort an. Korrekte Benutzung: ${guildPrefix}wetter <Standort>` },
                 

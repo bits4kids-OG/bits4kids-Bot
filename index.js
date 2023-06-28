@@ -58,10 +58,10 @@ client.on("ready", () => {
                 const now = Date.now();
                 const duration = now - voicelogUsers[guildId][user].joined;
                 const duration_string = utils.msToTime(duration);
-                const Zeit = new Date().toLocaleString("en-GB");
+                const Zeit = new Date(voicelogUsers[guildId][user].joined).toLocaleString("en-GB");
                 const VoiceLogChannel = utils.findVoiceLogChannel(guild);
 
-                VoiceLogChannel?.send(`${member} has left a OCC voice channel during bot downtime.\nTime: ${Zeit}\nUser was in the channel for at most ${duration_string}`);
+                VoiceLogChannel?.send(`${member} has left an OCC voice channel during bot downtime.\nJoined at: ${Zeit}\nUser was in the channel for at most ${duration_string}`);
                 delete(voicelogUsers[guildId][user]);
             }
         }
@@ -318,7 +318,6 @@ client.on("voiceStateUpdate", (oldState, newState) => {
     }
     if ((newState.channel) && (oldState.channel) && (newState.channel.id === oldState.channel.id)) return;
 
-    const Zeit = new Date().toLocaleString("en-GB");
     const VoiceLogChannel = utils.findVoiceLogChannel(newState.guild);
   
     if ((newState.channel) && (!oldState.channel)) {
@@ -357,12 +356,12 @@ client.on("voiceStateUpdate", (oldState, newState) => {
     } else if ((!newState.channel) && (oldState.channel)) {
         if(!oldState.channel.name.toLowerCase().includes(config.Meetingräume)) return;
         const member = newState.member;
-        voicelogLeftChannel(member, newState, oldState, Zeit, VoiceLogChannel);
+        voicelogLeftChannel(member, newState, oldState, VoiceLogChannel);
 
     } else if ((newState.channel) && (oldState.channel)) {
         if (newState.channel.id !== oldState.channel.id) {
             if((!newState.channel.name.toLowerCase().includes(config.Meetingräume)) && (oldState.channel.name.toLowerCase().includes(config.Meetingräume))) {
-                voicelogLeftChannel(newState.member, newState, oldState, Zeit, VoiceLogChannel);
+                voicelogLeftChannel(newState.member, newState, oldState, VoiceLogChannel);
             } else if((newState.channel.name.toLowerCase().includes(config.Meetingräume)) && (!oldState.channel.name.toLowerCase().includes(config.Meetingräume))) {
                 voicelogUsers = utils.addVoicelogRecovery(newState.guild, newState.member.user);
             }
@@ -444,17 +443,19 @@ client.on("guildCreate", async (guild) => {
 client.login(config.tokenReal);
 
 
-function voicelogLeftChannel(member, newState, oldState, Zeit, VoiceLogChannel) {
+function voicelogLeftChannel(member, newState, oldState, VoiceLogChannel) {
     const guildVoicelogUsers = voicelogUsers[member.guild.id];
     if(member.user.id in guildVoicelogUsers === false) {
-        VoiceLogChannel?.send(`${newState.member} has left the voice channel ${oldState.channel}.\nUser was not among the observed users, therefore no duration can be displayed.\nTime: ${Zeit}`);
+        const Zeit = new Date().toLocaleString("en-GB");
+        VoiceLogChannel?.send(`**${oldState.channel.parent.name.slice(4)}:**\n${newState.member} has left the voice channel ${oldState.channel}.\nUser was not among the observed users, therefore no duration can be displayed.\nCurrent time: ${Zeit}`);
         return;
     }
     const userVoicelogUsers = voicelogUsers[member.guild.id][member.user.id];
+    const Zeit = new Date(userVoicelogUsers.joined).toLocaleString("en-GB");
     const now = Date.now();
     const duration = now - userVoicelogUsers.joined;
     const duration_string = utils.msToTime(duration);
-    VoiceLogChannel?.send(`${newState.member} has left the voice channel ${oldState.channel}.\nTime: ${Zeit}\nUser was in the channel for ${duration_string}`);
+    VoiceLogChannel?.send(`**${oldState.channel.parent.name.slice(4)}:**\n${newState.member} has left the voice channel ${oldState.channel}.\nJoined at: ${Zeit}\nUser was in the channel for ${duration_string}`);
     delete(voicelogUsers[member.guild.id][member.user.id]);
 
     fs.writeFileSync("./voicelogRecovery.json", JSON.stringify(voicelogUsers, null, 2), err => {
