@@ -18,7 +18,7 @@ module.exports = {
         if(!args[0] || !args[1] || isNaN(args[1]) || !msg.mentions.users.first()) {
             msg.reply(`Correct usage: ${guildPrefix}addxp <@user> <amount of xp>`);
             return;
-        } else if ((utils.isInDesiredForm(args[1]) === false) || (utils.testNumber(args[1]) == null)) {
+        } else if ((utils.isInDesiredForm(args[1]) === false) || (utils.testNumber(args[1]) == null) || (utils.testNumber(args[1]) >= 500000)) {
             msg.reply("Invalid amount of xp!");
         } else {
             const user = msg.mentions.users.first();
