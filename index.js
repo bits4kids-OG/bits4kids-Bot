@@ -311,9 +311,10 @@ client.on("interactionCreate", async interaction => {
 
 //Voice Channel Detection
 client.on("voiceStateUpdate", (oldState, newState) => {
-    const trainRole = newState.guild.roles.cache.find(r => r.id === config.TrainerRolle);
+    const normalTrainRole = newState.guild.roles.cache.find(r => r.id === config.TrainerRolle);
+    const trainRole = newState.guild.roles.cache.find(r => r.id === config.OnlineTrainerRolle);
     const orgRole = newState.guild.roles.cache.find(r => r.id === config.OrganisationRolle);
-    if ((trainRole) && (orgRole) && (newState.member.roles) && ((newState.member.roles.cache.has(trainRole.id)) || (newState.member.roles.cache.has(orgRole.id)))) {
+    if ((normalTrainRole) && (trainRole) && (orgRole) && (newState.member.roles) && ((newState.member.roles.cache.has(normalTrainRole.id)) || (newState.member.roles.cache.has(trainRole.id)) || (newState.member.roles.cache.has(orgRole.id)))) {
         return;
     }
     if ((newState.channel) && (oldState.channel) && (newState.channel.id === oldState.channel.id)) return;
@@ -384,9 +385,10 @@ client.on("messageCreate", async (msg) => {
     if (!guildPrefix) guildPrefix = defaultPrefix;
 
     if (!msg.content.startsWith(guildPrefix)) {
-        const trainRole = msg.guild.roles.cache.find(r => r.id === config.TrainerRolle);
+        const normalTrainRole = msg.guild.roles.cache.find(r => r.id === config.TrainerRolle);
+        const trainRole = msg.guild.roles.cache.find(r => r.id === config.OnlineTrainerRolle);
         const orgRole = msg.guild.roles.cache.find(r => r.id === config.OrganisationRolle);
-        if ((trainRole) && (orgRole) && (msg.member.roles) && ((msg.member.roles.cache.has(trainRole.id)) || (msg.member.roles.cache.has(orgRole.id)))) {
+        if ((normalTrainRole) && (trainRole) && (orgRole) && (msg.member.roles) && ((msg.member.roles.cache.has(normalTrainRole.id)) || (msg.member.roles.cache.has(trainRole.id)) || (msg.member.roles.cache.has(orgRole.id)))) {
             return;
         }
 

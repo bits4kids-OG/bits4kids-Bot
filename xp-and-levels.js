@@ -4,6 +4,7 @@ const config = require("./config.json");
 
 const fs = require("fs");
 
+//Dateinamen geordnet laut aufsteigender Levelanzahl
 const Badges = ["Rookie-Bot.png", "Advanced-Bot.png", "Industrie-Robo.png", "Robo-Köpfchen.png", "Robo-Kopf.png", "Mars-Robo.png"];
 
 //Rollen

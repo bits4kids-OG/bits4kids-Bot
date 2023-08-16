@@ -31,10 +31,11 @@ module.exports = {
                 msg.reply("You can't give the bot xp!");
                 return;
             }
-            const trainRole = msg.guild.roles.cache.find(r => r.id === config.TrainerRolle);
+            const normalTrainRole = msg.guild.roles.cache.find(r => r.id === config.TrainerRolle);
+            const trainRole = msg.guild.roles.cache.find(r => r.id === config.OnlineTrainerRolle);
             const orgRole = msg.guild.roles.cache.find(r => r.id === config.OrganisationRolle);
             const member = msg.guild.members.cache.get(user.id);
-            if ((trainRole) && (orgRole) && (member.roles) && ((member.roles.cache.has(trainRole.id)) || (member.roles.cache.has(orgRole.id)))) {
+            if ((normalTrainRole) && (trainRole) && (orgRole) && (member.roles) && ((member.roles.cache.has(normalTrainRole.id)) || (member.roles.cache.has(trainRole.id)) || (member.roles.cache.has(orgRole.id)))) {
                 msg.reply("Error: Trainer:innen können keine XP besitzen.");
                 return;
             }
