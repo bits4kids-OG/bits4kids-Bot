@@ -128,62 +128,57 @@ function nextLevel(msg, user, guildPrefix) {
     //Badge-System
     //Hinzufügen
     let badge = "";
-    let addedRole;
+    let role;
 
     if(userXP.level === Lvl150Lvl) {
         badge = "./badges/" + Badges[5];
 
-        let role = utils.getRole(msg.member, Lvl150Role);
+        role = utils.getRole(msg.member, Lvl150Role);
         if(role) msg.member.roles.add(role);
-        addedRole = role;
 
     } else if(userXP.level === Lvl100Lvl) {
         badge = "./badges/" + Badges[4];
 
-        let role = utils.getRole(msg.member, Lvl100Role);
+        role = utils.getRole(msg.member, Lvl100Role);
         if(role) msg.member.roles.add(role);
-        addedRole = role;
 
     } else if(userXP.level === Lvl50Lvl) {
         badge = "./badges/" + Badges[3];
 
-        let role = utils.getRole(msg.member, Lvl50Role);
+        role = utils.getRole(msg.member, Lvl50Role);
         if(role) msg.member.roles.add(role);
-        addedRole = role;
 
     } else if(userXP.level === Lvl20Lvl) {
         badge = "./badges/" + Badges[2];
 
-        let role = utils.getRole(msg.member, Lvl20Role);
+        role = utils.getRole(msg.member, Lvl20Role);
         if(role) msg.member.roles.add(role);
-        addedRole = role;
 
     } else if(userXP.level === Lvl10Lvl) {
         badge = "./badges/" + Badges[1];
 
-        let role = utils.getRole(msg.member, Lvl10Role);
+        role = utils.getRole(msg.member, Lvl10Role);
         if(role) msg.member.roles.add(role);
-        addedRole = role;
 
     } else if(userXP.level === Lvl5Lvl) {
         badge = "./badges/" + Badges[0];
 
-        let role = utils.getRole(msg.member, Lvl5Role);
+        role = utils.getRole(msg.member, Lvl5Role);
         if(role) msg.member.roles.add(role);
-        addedRole = role.name;
     }
 
     //console.log(badge);
 
     const file = new Discord.AttachmentBuilder(badge);
 
-    const channel = utils.findChannel(msg, config.xpChannel);
+    const channel = utils.findXpChannel(msg, config.xpChannel);
     channel?.send({ content: `Glückwunsch, ${user}`, embeds: [levelUp] })
         .then(() => {
             if(utils.checkArrayEmpty(badge)) return;
-
+            
+            if(!role) role = "*Rolle nicht verfügbar*";
             channel?.send({
-                content: `Tolle Leistung, ${user}! Du hast gerade ein Badge und die Rolle ${addedRole} bekommen! Rufe deine Badges mit ${guildPrefix}badges ab.`,
+                content: `Tolle Leistung, ${user}! Du hast gerade ein Badge und die Rolle ${role} bekommen! Rufe deine Badges mit ${guildPrefix}badges ab.`,
                 //embeds: [badgeEarned],
                 files: [file]
             });

@@ -4,7 +4,7 @@ const fs = require("fs");
 exports.findGoodChannel = function(guild) {
     return guild.channels.cache
         .filter((channel) => {
-            if (channel.type !== "GUILD_TEXT") return false;
+            if (channel.type !== Discord.ChannelType.GuildText) return false;
             return channel
                 .permissionsFor(guild.members.me)
                 .has(Discord.PermissionsBitField.Flags.SendMessages);
@@ -69,13 +69,13 @@ exports.findVoiceLogChannel = function(guild) {
     let VoiceLogChannel = guild.channels.cache.find(channel => channel.name === "voicelog");
     if ((VoiceLogChannel) && (((VoiceLogChannel.permissionsFor(guild.members.me).has(Discord.PermissionsBitField.Flags.ViewChannel)) == false) || ((VoiceLogChannel.permissionsFor(guild.members.me).has(Discord.PermissionsBitField.Flags.SendMessages)) == false))) {
         VoiceLogChannel = null;
-        const channel = findGoodChannel(guild);
+        const channel = findLogChannel(guild);
         if (channel) {
             channel.send("Please set up a channel named voicelog!");
         }
     }
     if (!VoiceLogChannel) {
-        const channel = findGoodChannel(guild);
+        const channel = findLogChannel(guild);
         if (channel) {
             channel.send("Please set up a channel named voicelog!");
         }
@@ -142,17 +142,17 @@ exports.Progressbar = function(value, maxValue, size) {
     return bar;
 };
 
-exports.findChannel = function(msg, id) {
-    let channel = msg.guild.channels.cache.get(id);
+exports.findXpChannel = function(msg, name) {
+    let channel = msg.guild.channels.cache.find(channel => channel.name === name);
     if ((channel) && (((channel.permissionsFor(msg.guild.members.me).has(Discord.PermissionsBitField.Flags.ViewChannel)) == false) || ((channel.permissionsFor(msg.guild.members.me).has(Discord.PermissionsBitField.Flags.SendMessages)) == false))) {
         channel = null;
-        const sonstchannel = findGoodChannel(msg.guild);
+        const sonstchannel = findLogChannel(msg.guild);
         if (sonstchannel) {
             sonstchannel.send("I don't have the permission to send messages in the xp-channel!");
         }
     }
     if (!channel) {
-        const sonstchannel = findGoodChannel(msg.guild);
+        const sonstchannel = findLogChannel(msg.guild);
         if (sonstchannel) {
             sonstchannel.send("Xp-channel not found!");
         }
@@ -285,10 +285,28 @@ exports.testNumber = function(number) {
 
 
 
+function findLogChannel(guild) {
+    let logChannel = guild.channels.cache.find(channel => channel.name === "log");
+    if ((logChannel) && (((logChannel.permissionsFor(guild.members.me).has(Discord.PermissionsBitField.Flags.ViewChannel)) == false) || ((logChannel.permissionsFor(guild.members.me).has(Discord.PermissionsBitField.Flags.SendMessages)) == false))) {
+        logChannel = null;
+        const channel = findGoodChannel(guild);
+        if (channel) {
+            channel.send("Please set up a channel named log!");
+        }
+    }
+    if (!logChannel) {
+        const channel = findGoodChannel(guild);
+        if (channel) {
+            channel.send("Please set up a channel named log!");
+        }
+    }
+    return logChannel;
+}
+
 function findGoodChannel(guild) {
     return guild.channels.cache
         .filter((channel) => {
-            if (channel.type !== "GUILD_TEXT") return false;
+            if (channel.type !== Discord.ChannelType.GuildText) return false;
             return channel
                 .permissionsFor(guild.members.me)
                 .has(Discord.PermissionsBitField.Flags.SendMessages);
