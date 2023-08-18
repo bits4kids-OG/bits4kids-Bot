@@ -129,42 +129,43 @@ function nextLevel(msg, user, guildPrefix) {
     //Hinzufügen
     let badge = "";
     let role;
+    const member = msg.guild.members.cache.get(user.id);
 
     if(userXP.level === Lvl150Lvl) {
         badge = "./badges/" + Badges[5];
 
-        role = utils.getRole(msg.member, Lvl150Role);
-        if(role) msg.member.roles.add(role);
+        role = utils.getRole(member, Lvl150Role);
+        if(role) member.roles.add(role);
 
     } else if(userXP.level === Lvl100Lvl) {
         badge = "./badges/" + Badges[4];
 
-        role = utils.getRole(msg.member, Lvl100Role);
-        if(role) msg.member.roles.add(role);
+        role = utils.getRole(member, Lvl100Role);
+        if(role) member.roles.add(role);
 
     } else if(userXP.level === Lvl50Lvl) {
         badge = "./badges/" + Badges[3];
 
-        role = utils.getRole(msg.member, Lvl50Role);
-        if(role) msg.member.roles.add(role);
+        role = utils.getRole(member, Lvl50Role);
+        if(role) member.roles.add(role);
 
     } else if(userXP.level === Lvl20Lvl) {
         badge = "./badges/" + Badges[2];
 
-        role = utils.getRole(msg.member, Lvl20Role);
-        if(role) msg.member.roles.add(role);
+        role = utils.getRole(member, Lvl20Role);
+        if(role) member.roles.add(role);
 
     } else if(userXP.level === Lvl10Lvl) {
         badge = "./badges/" + Badges[1];
 
-        role = utils.getRole(msg.member, Lvl10Role);
-        if(role) msg.member.roles.add(role);
+        role = utils.getRole(member, Lvl10Role);
+        if(role) member.roles.add(role);
 
     } else if(userXP.level === Lvl5Lvl) {
         badge = "./badges/" + Badges[0];
 
-        role = utils.getRole(msg.member, Lvl5Role);
-        if(role) msg.member.roles.add(role);
+        role = utils.getRole(member, Lvl5Role);
+        if(role) member.roles.add(role);
     }
 
     //console.log(badge);
@@ -176,9 +177,14 @@ function nextLevel(msg, user, guildPrefix) {
         .then(() => {
             if(utils.checkArrayEmpty(badge)) return;
             
-            if(!role) role = "*Rolle nicht verfügbar*";
+            let role_str;
+            if(role) {
+                role_str = `**${role.name}**`;
+            } else {
+                role_str = "*Rolle nicht verfügbar*";
+            }
             channel?.send({
-                content: `Tolle Leistung, ${user}! Du hast gerade ein Badge und die Rolle ${role} bekommen! Rufe deine Badges mit ${guildPrefix}badges ab.`,
+                content: `Tolle Leistung, ${user}! Du hast gerade ein Badge und die Rolle ${role_str} bekommen! Rufe deine Badges mit ${guildPrefix}badges ab.`,
                 //embeds: [badgeEarned],
                 files: [file]
             });
