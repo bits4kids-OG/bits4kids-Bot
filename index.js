@@ -90,6 +90,7 @@ client.on("inviteCreate", (invite) => {
 
 client.on("guildMemberAdd", member => {
     //console.log(member.guild.features);
+    if (member.user.bot) return;
     //Wenn ein Server kein Rules Screening verwendet, wird ein anderes System verwendet.
     if (!member.guild.features.includes("MEMBER_VERIFICATION_GATE_ENABLED")) {
     //console.log("Kein Membership Screening!");

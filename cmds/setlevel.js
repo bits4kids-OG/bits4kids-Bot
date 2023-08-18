@@ -22,6 +22,7 @@ module.exports = {
             return;
         } else if ((utils.isInDesiredForm(args[1]) === false) || (utils.testNumber(args[1]) == null) || (utils.testNumber(args[1]) > 200)) {
             msg.reply("Invalid level amount!");
+            return;
         } else {
             const user = msg.mentions.users.first();
             const number = utils.testNumber(args[1]);

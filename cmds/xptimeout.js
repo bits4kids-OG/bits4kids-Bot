@@ -21,8 +21,9 @@ module.exports = {
         if(!args[0] || !args[1] || isNaN(args[1]) || !msg.mentions.users.first()) {
             msg.reply(`Correct usage: ${guildPrefix}timeout <@user> <amount in days>`);
             return;
-        } else if ((isInDesiredForm(args[1]) === false) || (testNumber(args[1]) == null)) {
+        } else if ((isInDesiredForm(args[1]) === false) || (testNumber(args[1]) == null) || (testNumber(args[1]) > 100)) {
             msg.reply("Invalid timeout duration!");
+            return;
         } else {
             const user = msg.mentions.users.first();
             const number = testNumber(args[1]);
