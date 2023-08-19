@@ -1,7 +1,7 @@
 const Discord = require("discord.js");
 
 const myIntents = new Discord.IntentsBitField();
-myIntents.add(Discord.GatewayIntentBits.MessageContent, Discord.GatewayIntentBits.GuildVoiceStates, Discord.GatewayIntentBits.DirectMessageReactions, Discord.GatewayIntentBits.GuildMembers, Discord.GatewayIntentBits.DirectMessages, Discord.GatewayIntentBits.GuildMessageReactions, Discord.GatewayIntentBits.GuildMessages, Discord.GatewayIntentBits.GuildInvites, Discord.GatewayIntentBits.GuildMembers, Discord.GatewayIntentBits.Guilds);
+myIntents.add(Discord.GatewayIntentBits.MessageContent, Discord.GatewayIntentBits.GuildVoiceStates, Discord.GatewayIntentBits.DirectMessageReactions, Discord.GatewayIntentBits.GuildMembers, Discord.GatewayIntentBits.DirectMessages, Discord.GatewayIntentBits.AutoModerationExecution, Discord.GatewayIntentBits.GuildMessageReactions, Discord.GatewayIntentBits.GuildMessages, Discord.GatewayIntentBits.GuildInvites, Discord.GatewayIntentBits.GuildMembers, Discord.GatewayIntentBits.Guilds);
 
 const client = new Discord.Client({ intents: myIntents });
 
@@ -310,6 +310,15 @@ client.on("interactionCreate", async interaction => {
     //await button.reply.delete();
 });
 
+//Automatische XP-Abzüge bei Benutzung von Schimpfwörtern
+client.on("autoModerationActionExecution", (execution) => {
+    if(execution.action.type === Discord.AutoModerationActionType.BlockMessage) {
+        let guildPrefix = prefix.getPrefix(execution.guild.id);
+        if (!guildPrefix) guildPrefix = defaultPrefix;
+        xp_levels.removeXP(execution, execution.member.user, -50, guildPrefix);
+    }
+});
+
 //Voice Channel Detection
 client.on("voiceStateUpdate", (oldState, newState) => {
     const normalTrainRole = newState.guild.roles.cache.find(r => r.id === config.TrainerRolle);
@@ -380,7 +389,7 @@ client.on("messageCreate", async (msg) => {
         msg.reply("Entschuldigung, aber der Bot funktioniert nur in Servern.");
         return;
     }
-
+    if(msg.content === "") return;
 
     let guildPrefix = prefix.getPrefix(msg.guild.id);
     if (!guildPrefix) guildPrefix = defaultPrefix;
