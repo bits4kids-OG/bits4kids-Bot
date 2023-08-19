@@ -313,9 +313,20 @@ client.on("interactionCreate", async interaction => {
 //Automatische XP-Abzüge bei Benutzung von Schimpfwörtern
 client.on("autoModerationActionExecution", (execution) => {
     if(execution.action.type === Discord.AutoModerationActionType.BlockMessage) {
+        const xpRemoval = -50;
+        if ((execution.user.id === client.user.id) || (execution.user.bot)) {
+            return;
+        }
+        const normalTrainRole = execution.guild.roles.cache.find(r => r.id === config.TrainerRolle);
+        const trainRole = execution.guild.roles.cache.find(r => r.id === config.OnlineTrainerRolle);
+        const orgRole = execution.guild.roles.cache.find(r => r.id === config.OrganisationRolle);
+        if ((normalTrainRole) && (trainRole) && (orgRole) && (execution.member.roles) && ((execution.member.roles.cache.has(normalTrainRole.id)) || (execution.member.roles.cache.has(trainRole.id)) || (execution.member.roles.cache.has(orgRole.id)))) {
+            return;
+        }
         let guildPrefix = prefix.getPrefix(execution.guild.id);
         if (!guildPrefix) guildPrefix = defaultPrefix;
-        xp_levels.removeXP(execution, execution.member.user, -50, guildPrefix);
+        xp_levels.removeXP(execution, execution.user, xpRemoval, guildPrefix);
+        execution.user.send(`Wir bitten um einen freundlichen und respektvollen Umgang auf unserem Server. Schimpfwörter und Spam sind hier nicht erlaubt, daher wurden dir ${Math.abs(xpRemoval)} XP abgezogen.`);
     }
 });
 
