@@ -53,6 +53,33 @@ exports.addXP = function(msg, user, number, guildPrefix) {
     });
 };
 
+exports.removeXP = function(msg, user, number, guildPrefix) {
+    const XP = utils.getXP(msg, user);
+    const userXP = XP[msg.guild.id][user.id];
+
+    userXP.xp += number;
+    userXP.last_message = Date.now();
+    
+    //Level
+
+    let levelDowngrade = false;
+    let xpPrevLevel = LvlAlg(userXP.level-1);
+    while(userXP.xp < 0) {
+        levelDowngrade = true;
+        if(userXP.level > 0) {
+            userXP.level -= 1;
+            userXP.xp = userXP.xp + xpPrevLevel;
+            xpPrevLevel = LvlAlg(userXP.level-1);
+        } else {
+            userXP.xp = 0;
+        }
+    }
+    fs.writeFileSync("./xp.json", JSON.stringify(XP, null, 2), err => {
+        if(err) console.log(err);
+    });
+    if(levelDowngrade === true) nextLevel(msg, user, guildPrefix);
+};
+
 //Abfrage nach XP durch den Benutzer
 
 exports.xpInfoScreen = function(msg, user) {
