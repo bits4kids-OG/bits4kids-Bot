@@ -314,7 +314,7 @@ client.on("interactionCreate", async interaction => {
 client.on("autoModerationActionExecution", (execution) => {
     if(execution.action.type === Discord.AutoModerationActionType.BlockMessage) {
         //if(execution.ruleTriggerType === Discord.AutoModerationRuleTriggerType.Spam) return;
-        const xpRemoval = -50;
+        const xpRemoval = -100;
         if ((execution.user.id === client.user.id) || (execution.user.bot)) {
             return;
         }
