@@ -295,16 +295,16 @@ client.on("interactionCreate", async interaction => {
         }
     }
     if ((utils.checkArrayEmpty(roleList) == true) && (utils.checkArrayEmpty(roleAlready) == true)) {
-        await button.editReply("Diesem Knopf wurden noch keine Rollen hinzugefügt!");
+        await button.editReply("Dieser Knopf ist noch nicht aktiviert!");
         logChannel?.send(`No roles connected to the button ${button.customId}.`);
     } else if ((utils.checkArrayEmpty(roleList) == true) && (utils.checkArrayEmpty(roleAlready) == false)) {
-        await button.editReply("Du hast bereits alle Rollen!");
+        await button.editReply("Du siehst bereits die Kanäle dieses Coding Clubs!");
         logChannel?.send(`User already has all roles connected to the button ${button.customId}.`);
     } else if ((utils.checkArrayEmpty(roleList) == false) && (utils.checkArrayEmpty(roleAlready) == false)) {
-        await button.editReply("Folgende Rollen wurden erfolgreich hinzugefügt: \n" + roleList + ":white_check_mark:" + "\nFolgende Rollen hast du bereits: \n" +roleAlready);
+        await button.editReply("Folgende Coding Club Kanäle siehst du jetzt: \n" + roleList + ":white_check_mark:" + "\nDiese hast du bereits vorher gesehen: \n" +roleAlready);
         logChannel?.send(`User already has the role(s): \n${roleAlready}Added role(s): \n${roleList}Connected to the button ${button.customId}.`);
     } else {
-        await button.editReply("Folgende Rollen wurden erfolgreich hinzugefügt: \n" + roleList + ":white_check_mark:");
+        await button.editReply("Folgende Coding Club Kanäle siehst du jetzt: \n" + roleList + ":white_check_mark:");
         logChannel?.send(`User didn't have any roles. Added roles: \n${roleList}Connected to the button ${button.customId}.`);
     }
     //await button.reply.delete();
@@ -313,6 +313,7 @@ client.on("interactionCreate", async interaction => {
 //Automatische XP-Abzüge bei Benutzung von Schimpfwörtern
 client.on("autoModerationActionExecution", (execution) => {
     if(execution.action.type === Discord.AutoModerationActionType.BlockMessage) {
+        //if(execution.ruleTriggerType === Discord.AutoModerationRuleTriggerType.Spam) return;
         const xpRemoval = -50;
         if ((execution.user.id === client.user.id) || (execution.user.bot)) {
             return;
