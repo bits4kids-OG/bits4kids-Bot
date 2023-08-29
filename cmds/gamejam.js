@@ -20,19 +20,19 @@ module.exports = {
         const gamejamChannel = findGamejamChannel(msg,config.GameJamChannel);
 
         if (args[0] === "start") {
-            gamejamChannel.permissionOverwrites.edit(msg.guild.roles.everyone, { VIEW_CHANNEL: null });
+            gamejamChannel.permissionOverwrites.edit(msg.guild.roles.everyone, { ViewChannel: null });
             msg.reply("GameJam Channels are now visible to everyone.");
             return;
         }
 
         if (args[0] === "stop") {
-            gamejamChannel.permissionOverwrites.edit(msg.guild.roles.everyone, { VIEW_CHANNEL: false });
+            gamejamChannel.permissionOverwrites.edit(msg.guild.roles.everyone, { ViewChannel: false });
             msg.reply("GameJam Channels are now hidden for everyone.");
             return;
         }
 
         if (args[0] === "status") {
-            if (gamejamChannel.permissionsFor(msg.guild.roles.everyone).has("VIEW_CHANNEL")) {
+            if (gamejamChannel.permissionsFor(msg.guild.roles.everyone).has(Discord.PermissionsBitField.Flags.ViewChannel)) {
                 msg.reply("GameJam Channels are currently visible to everyone.");
             } else {
                 msg.reply("GameJam Channels are currently hidden for everyone.");
