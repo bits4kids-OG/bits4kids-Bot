@@ -29,7 +29,7 @@ module.exports = {
         msg.reply("Sent you a DM!\nThis process will take a few minutes.");
         const xpList = new Discord.EmbedBuilder()
             .setColor(utils.randomColor())
-            .setTitle("XP und Levels von folgenden Benutzern sind in meiner Datenbank:")
+            .setTitle("XP und Levels von folgenden Benutzer:innen sind in meiner Datenbank:")
             .setThumbnail(client.user.avatarURL());
 
         let xpEmpty = [];
@@ -61,7 +61,7 @@ module.exports = {
         if (utils.checkArrayEmpty(xpEmpty) == true) {
             xpList.addFields({ name: "Keine gespeicherten XP", value: "für diesen Server!" });
         } else {
-            xpList.addFields({ name: `${xpEmpty.length} Benutzer mit gespeicherten XP`, value: "in der Datenbank hinterlegt!" });
+            xpList.addFields({ name: `${xpEmpty.length} Benutzer:innen mit gespeicherten XP`, value: "in der Datenbank hinterlegt!" });
             sendString = true;
         }
 
