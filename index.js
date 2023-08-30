@@ -407,6 +407,9 @@ client.on("messageCreate", async (msg) => {
     if (!guildPrefix) guildPrefix = defaultPrefix;
 
     if (!msg.content.startsWith(guildPrefix)) {
+        if (config.blacklist.includes(msg.author.id)) {
+            return;
+        }
         const normalTrainRole = msg.guild.roles.cache.find(r => r.id === config.TrainerRolle);
         const trainRole = msg.guild.roles.cache.find(r => r.id === config.OnlineTrainerRolle);
         const orgRole = msg.guild.roles.cache.find(r => r.id === config.OrganisationRolle);
