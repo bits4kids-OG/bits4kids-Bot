@@ -53,7 +53,7 @@ exports.findLogChannel = function(msg) {
         logChannel = null;
         const channel = findGoodChannel(msg.guild);
         if (channel) {
-            channel.send("Please set up a channel named log!");
+            channel.send("Please set up a channel named log with the correct permissions!");
         }
     }
     if (!logChannel) {
@@ -71,7 +71,7 @@ exports.findVoiceLogChannel = function(guild) {
         VoiceLogChannel = null;
         const channel = findLogChannel(guild);
         if (channel) {
-            channel.send("Please set up a channel named voicelog!");
+            channel.send("Please set up a channel named voicelog with the correct permissions!");
         }
     }
     if (!VoiceLogChannel) {
@@ -291,7 +291,7 @@ function findLogChannel(guild) {
         logChannel = null;
         const channel = findGoodChannel(guild);
         if (channel) {
-            channel.send("Please set up a channel named log!");
+            channel.send("Please set up a channel named log with the correct permissions!");
         }
     }
     if (!logChannel) {

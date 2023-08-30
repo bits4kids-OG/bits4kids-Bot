@@ -18,6 +18,7 @@ module.exports = {
             return;
         }
         const gamejamChannel = findGamejamChannel(msg,config.GameJamChannel);
+        if(!gamejamChannel) return;
 
         if (args[0] === "start") {
             gamejamChannel.permissionOverwrites.edit(msg.guild.roles.everyone, { ViewChannel: null });
@@ -47,13 +48,13 @@ module.exports = {
             let channel = msg.guild.channels.cache.get(id);
             if ((channel) && (((channel.permissionsFor(msg.guild.members.me).has(Discord.PermissionsBitField.Flags.ViewChannel)) == false) || ((channel.permissionsFor(msg.guild.members.me).has(Discord.PermissionsBitField.Flags.ManageRoles)) == false))) {
                 channel = null;
-                const sonstchannel = utils.findLogChannel(msg.guild);
+                const sonstchannel = utils.findLogChannel(msg);
                 if (sonstchannel) {
                     sonstchannel.send("I don't have the permission to edit the permissions of the GameJam channel!");
                 }
             }
             if (!channel) {
-                const sonstchannel = utils.findLogChannel(msg.guild);
+                const sonstchannel = utils.findLogChannel(msg);
                 if (sonstchannel) {
                     sonstchannel.send("GameJam channel not found!");
                 }
