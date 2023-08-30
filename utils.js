@@ -48,20 +48,7 @@ exports.checkArrayEmpty = function(array) {
 };
   
 exports.findLogChannel = function(msg) {
-    let logChannel = msg.guild.channels.cache.find(channel => channel.name === "log");
-    if ((logChannel) && (((logChannel.permissionsFor(msg.guild.members.me).has(Discord.PermissionsBitField.Flags.ViewChannel)) == false) || ((logChannel.permissionsFor(msg.guild.members.me).has(Discord.PermissionsBitField.Flags.SendMessages)) == false))) {
-        logChannel = null;
-        const channel = findGoodChannel(msg.guild);
-        if (channel) {
-            channel.send("Please set up a channel named log with the correct permissions!");
-        }
-    }
-    if (!logChannel) {
-        const channel = findGoodChannel(msg.guild);
-        if (channel) {
-            channel.send("Please set up a channel named log!");
-        }
-    }
+    let logChannel = findLogChannel(msg.guild);
     return logChannel;
 };
 
