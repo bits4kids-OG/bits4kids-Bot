@@ -28,11 +28,11 @@ module.exports = {
 
                     { name: "\u200b", value: "\u200b" },
                     {name: "Invitesystem", value: "\u200b" },
+                    { name: `${guildPrefix}refresh`, value: "Wenn neue Invites erstellt werden, muss dieser Command ausgeführt werden, bevor man eine Rolle verbinden kann. Der Command muss auch ausgeführt werden, wenn eine Datei für die Invitelinks oder Buttons verändert wurde. Benötigt die Berechtigung \"Manage Server\".", inline: true },
                     { name: `${guildPrefix}inviteconnect`, value: "Verknüpft einen Invite-Link oder nur den Code mit einer Rolle. Entweder den Namen der Rolle eingeben, oder die ID kopieren. Joint jemand mit diesem Invite, bekommt er automatisch die richtige Rolle zugewiesen. Wird der Befehl ohne Argumente ausgeführt, erscheint eine Vorlage zur korrekten Benutzung. Benötigt die Berechtigung \"Manage Server\".", inline: true },
                     { name: `${guildPrefix}button`, value: "Erstellt und Verknüpft einen Button mit einer Rolle. Wird der Befehl ohne Argumente ausgeführt, erscheint eine Vorlage zur korrekten Benutzung. Benötigt die Berechtigung \"Manage Server\".", inline: true },
                     { name: `${guildPrefix}showbeginners`, value: "Zeigt die gespeicherten Beginner auf diesem Server an. Die Aktualisierung der Datenbank erfolgt erst beim Beitritt des jewiligen Users zu einem Coding Club. Als Output wird eine Excel-Datei erzeugt. Benötigt die Berechtigung \"Manage Roles\".", inline: true },
                     { name: `${guildPrefix}pending`, value: "Zeigt an, welche Benutzer zwar auf dem Server sind, aber noch nicht die Regeln akzeptiert haben. Benötigt die Berechtigung \"Manage Server\".", inline: true },
-                    { name: `${guildPrefix}refresh`, value: "Wenn neue Invites erstellt werden, muss dieser Command ausgeführt werden, bevor man eine Rolle verbinden kann. Der Command muss auch ausgeführt werden, wenn eine Datei für die Invitelinks oder Buttons verändert wurde. Benötigt die Berechtigung \"Manage Server\".", inline: true },
 
                     { name: "\u200b", value: "\u200b" },
                     { name: "Interaktion mit Teilnehmer:innen", value: "\u200b" },
