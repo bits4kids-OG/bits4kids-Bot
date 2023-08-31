@@ -1,17 +1,23 @@
 {
-    "tokenReal": "",
-    "owner": [],
-    "defaultPrefix": "",
-    "blacklist": [],
-    "author": "",
-    "invite": "",
-    "OpenWeatherMapAPI": "",
-    "xpChannel": "",
-    "welcomeChannel": "",
-    "TrainerRolle": "",
-    "OnlineTrainerRolle": "",
-    "OrganisationRolle": "",
-    "Meetingräume": "",
-    "GameJamChannel": "",
-    "BeginnerRolle": ""
+    "tokenReal": "Your Discord bot token",
+    "owner": [
+      "An array of",
+      "bot admin user IDs "
+    ],
+    "defaultPrefix": "Desired command prefix",
+    "blacklist": [
+      "An array of",
+      "blacklisted users"
+    ],
+    "author": "User ID of the bot's author",
+    "invite": "Invite link for the bot; Use this permission bitfield: 268954737",
+    "OpenWeatherMapAPI": "Your OpenWeatherMapAPI key",
+    "xpChannel": "Name of the XP channel (string)",
+    "welcomeChannel": "Channel ID of the welcome channel",
+    "TrainerRolle": "Role ID of the first trainer role",
+    "OnlineTrainerRolle": "Role ID of the second trainer role",
+    "OrganisationRolle": "Role ID of the third trainer role",
+    "Meetingräume": "String that must be included in the names of VoiceLog-tracked channels.",
+    "GameJamChannel": "GameJam category channel ID",
+    "BeginnerRolle": "Name of the beginner role (string)"
   }
