@@ -56,7 +56,7 @@ module.exports = {
             let connectionsLinks = utils.getInviteCode(args[0]);
     
             if (connectionsLinks == null) {
-                msg.reply("Warning! No Link found.");
+                msg.reply("Warning! Invite link is not in the correct format.");
                 return;
             }
     
@@ -127,8 +127,8 @@ module.exports = {
                 });
             }
         }
-        function refresh(msg) {
-            msg.guild.invites.fetch().then(guildInvites => {
+        async function refresh(msg) {
+            await msg.guild.invites.fetch().then(guildInvites => {
                 invites[msg.guild.id] = guildInvites;
             });
             connections = JSON.parse(fs.readFileSync("./connections.json", "utf8"));

@@ -30,9 +30,9 @@ exports.getRole = function(member, roleName) {
     return role;
 };
   
-exports.refresh = function(msg) {
+exports.refresh = async function(msg) {
     const invites = {};
-    msg.guild.invites.fetch().then(guildInvites => {
+    await msg.guild.invites.fetch().then(guildInvites => {
         invites[msg.guild.id] = guildInvites;
     });
     connections = JSON.parse(fs.readFileSync("./connections.json", "utf8"));

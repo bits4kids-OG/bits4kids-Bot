@@ -76,25 +76,20 @@ client.on("ready", () => {
 client.on("inviteDelete", (invite) => {
     // Delete the Invite from Cache
     refreshInvites(invite);
-    //console.log(invites);
 });
 
 client.on("inviteCreate", (invite) => {
     // Update cache on new invites
     refreshInvites(invite);
-    //console.log(invites);
 });
 
 
 //Anmeldesystem: Rollen werden je nach Invite vergeben
 
 client.on("guildMemberAdd", member => {
-    //console.log(member.guild.features);
     if (member.user.bot) return;
     //Wenn ein Server kein Rules Screening verwendet, wird ein anderes System verwendet.
     if (!member.guild.features.includes("MEMBER_VERIFICATION_GATE_ENABLED")) {
-    //console.log("Kein Membership Screening!");
-        //console.log("Now checking....");
         refreshFiles();
         const old = {};
         invites[member.guild.id].forEach(inv => {
@@ -111,16 +106,12 @@ client.on("guildMemberAdd", member => {
                 return;
             }
             const inviter = client.users.cache.get(invite.inviter.id);
-            //console.log(invite);
             logChannel?.send(`${member.user} joined using invite code ${invite.code} from ${inviter}. Invite was used ${invite.uses} times since its creation. This was the URL: ${invite.url}`);
             let roleList = "";
             for(const key in connections[member.guild.id]) {
-                //console.log(`Now checking ${key}`);
                 if (key === invite.code) {
                     for (let i = 0; i < connections[member.guild.id][key].connections.length; i++) {
                         let role = member.guild.roles.cache.find(role => role.id === connections[member.guild.id][key].connections[i]);
-                        //console.log(connections[member.guild.id][key].connections[i]);
-                        //console.log(`Found the Role ${role}`);
                         member.roles.add(role);
                         roleList = roleList + role.name + "\n";
                         logChannel?.send(`Added role ${role} to user ${member.user}.`);
@@ -146,14 +137,10 @@ client.on("guildMemberAdd", member => {
         return;
     }
     //System bei Rules Screening. Es wird gewartet, bis die Regeln akzeptiert werden, bevor die Rolle hinzugefügt wird. Hier: Wenn der Server betreten wird
-    //console.log("Now checking....");
     const old = {};
     invites[member.guild.id].forEach(inv => {
         old[inv.code] = {code: inv.code, uses: inv.uses};
     });
-    console.log(invites[member.guild.id]);
-    console.log(old);
-    //refreshFiles();
     member.guild.invites.fetch().then(guildInvites => {
         invites[member.guild.id] = guildInvites;
         const invite = guildInvites.find(inv => {
@@ -165,12 +152,11 @@ client.on("guildMemberAdd", member => {
         if (typeof invite === "undefined") {
             const logChannel = utils.findLogChannel(member);
             logChannel?.send(`Warning: Encountered an error while trying to find the invite.\n${member.tag}`);
-            logChannel?.send("old: `" + JSON.stringify(old) + "`");
-            logChannel?.send("invites: `" + JSON.stringify(invites[member.guild.id].map(inv => {return {code: inv.code, uses: inv.uses};})) + "`");
+            logChannel?.send("old: `" + JSON.stringify(old, null, 2) + "`");
+            logChannel?.send("invites: `" + JSON.stringify(invites[member.guild.id].map(inv => {return {code: inv.code, uses: inv.uses};}), null, 2) + "`");
             return;
         }
         const inviter = client.users.cache.get(invite.inviter.id);
-        //console.log(invite);
         const logChannel = utils.findLogChannel(member);
         logChannel?.send(`${member.user} joined using invite code ${invite.code} from ${inviter}. Invite was used ${invite.uses} times since its creation. This was the URL: ${invite.url}\nAwaiting Membership Screening.`);
         if(member.guild.id in fromWhere === false) {
@@ -178,34 +164,13 @@ client.on("guildMemberAdd", member => {
         }
         let guildMember = fromWhere[member.guild.id];
         guildMember[member.id] = invite;
-    /*let roleList = "";
-    for(const key in connections[member.guild.id]) {
-      //console.log(`Now checking ${key}`);
-      if (key === invite.code) {
-        for (let i = 0; i < connections[member.guild.id][key].connections.length; i++) {
-          let role = member.guild.roles.cache.find(role => role.id === connections[member.guild.id][key].connections[i]);
-          //console.log(connections[member.guild.id][key].connections[i]);
-          //console.log(`Found the Role ${role}`);
-          member.roles.add(role);
-          roleList = roleList + role.name + "\n";
-          logChannel?.send(`Added role ${role} to user ${member.user}.`);
-        }
-      }
-    }
-    if (utils.checkArrayEmpty(roleList) == true) {
-      logChannel?.send(`No roles connected to this invite.`);
-    }
-    const channel = member.guild.channels.cache.get(875746344323674232);
-    channel?.send(`Herzlich Willkommen auf dem bits4kids-Discord Server, ${member}!`);*/
     });
 });
 
 //Wenn die Regeln akzeptiert werden
 client.on("guildMemberUpdate", (oldMember, newMember) => {
-    //console.log("hi");
     if (oldMember.pending && !newMember.pending) {
         const member = newMember;
-        //yconsole.log("Now checking....");
         refreshFiles();
         const logChannel = utils.findLogChannel(member);
         let invite;
@@ -219,22 +184,12 @@ client.on("guildMemberUpdate", (oldMember, newMember) => {
         } else {
             logChannel?.send(`Warning: Member ${member.user} passed membership screening, but they were not among the pending users.`);
         }
-        //member.guild.invites.fetch().then(guildInvites => {
-        //  const old = invites[member.guild.id];
-        //  invites[member.guild.id] = guildInvites;
-        //  const invite = guildInvites.find(inv => old.get(inv.code).uses < inv.uses);
-        //  const inviter = client.users.cache.get(invite.inviter.id);
-        //console.log(invite);
-        //  logChannel?.send(`${member.user} joined using invite code ${invite.code} from ${inviter}. Invite was used ${invite.uses} times since its creation. This was the URL: ${invite.url}`);
         if(invite) { 
             let roleList = "";
             for(const key in connections[member.guild.id]) {
-                //console.log(`Now checking ${key}`);
                 if (key === invite.code) {
                     for (let i = 0; i < connections[member.guild.id][key].connections.length; i++) {
                         let role = member.guild.roles.cache.find(role => role.id === connections[member.guild.id][key].connections[i]);
-                        //console.log(connections[member.guild.id][key].connections[i]);
-                        //console.log(`Found the Role ${role}`);
                         member.roles.add(role);
                         roleList = roleList + role.name + "\n";
                         logChannel?.send(`Added role ${role} to user ${member.user}.`);
@@ -260,7 +215,6 @@ client.on("guildMemberUpdate", (oldMember, newMember) => {
       
         const channel = member.guild.channels.cache.get(config.welcomeChannel);
         channel?.send(`Herzlich Willkommen auf dem bits4kids-Discord Server, ${member}!`);
-    //});
     }
 });
 
@@ -269,14 +223,12 @@ client.on("guildMemberUpdate", (oldMember, newMember) => {
 
 client.on("interactionCreate", async interaction => {
     if (!interaction.isButton()) return;
-    //console.log(interaction);
     await interaction.deferReply({ ephemeral: true });
     const button = interaction;
     refreshFiles();
     const logChannel = utils.findLogChannel(button);
     logChannel?.send(`${button.user} clicked button!`);
     const member = button.guild.members.cache.get(button.user.id);
-    //console.log(member);
     let roleList = "";
     let roleAlready = "";
     for(const key in buttons[button.guild.id]) {
