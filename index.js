@@ -51,7 +51,7 @@ for (const file of commandFiles) {
 
 //Login
 
-client.on("ready", () => {
+client.on(Discord.Events.ClientReady, () => {
     console.log(`Logged in as ${client.user.tag}!`);
     client.user
         .setPresence({ activities: [{ name: `-> ${defaultPrefix}help <-` }], status: "online" });
@@ -87,12 +87,12 @@ client.on("ready", () => {
 
 //automatisches Refreshen der Invites, bei Hinzufügen/Entfernen
 
-client.on("inviteDelete", (invite) => {
+client.on(Discord.Events.InviteDelete, (invite) => {
     // Delete the Invite from Cache
     refreshInvites(invite);
 });
 
-client.on("inviteCreate", (invite) => {
+client.on(Discord.Events.InviteCreate, (invite) => {
     // Update cache on new invites
     refreshInvites(invite);
 });
@@ -100,7 +100,7 @@ client.on("inviteCreate", (invite) => {
 
 //Anmeldesystem: Rollen werden je nach Invite vergeben
 
-client.on("guildMemberAdd", member => {
+client.on(Discord.Events.GuildMemberAdd, member => {
     if (member.user.bot) return;
     //Wenn ein Server kein Rules Screening verwendet, wird ein anderes System verwendet.
     if (!member.guild.features.includes("MEMBER_VERIFICATION_GATE_ENABLED")) {
@@ -182,7 +182,7 @@ client.on("guildMemberAdd", member => {
 });
 
 //Wenn die Regeln akzeptiert werden
-client.on("guildMemberUpdate", (oldMember, newMember) => {
+client.on(Discord.Events.GuildMemberUpdate, (oldMember, newMember) => {
     if (oldMember.pending && !newMember.pending) {
         const member = newMember;
         refreshFiles();
@@ -235,7 +235,7 @@ client.on("guildMemberUpdate", (oldMember, newMember) => {
 
 //Rollensystem per Buttons
 
-client.on("interactionCreate", async interaction => {
+client.on(Discord.Events.InteractionCreate, async interaction => {
     if (!interaction.isButton()) return;
     await interaction.deferReply({ ephemeral: true });
     const button = interaction;
@@ -277,7 +277,7 @@ client.on("interactionCreate", async interaction => {
 });
 
 //Automatische XP-Abzüge bei Benutzung von Schimpfwörtern
-client.on("autoModerationActionExecution", (execution) => {
+client.on(Discord.Events.AutoModerationActionExecution, (execution) => {
     if(execution.action.type === Discord.AutoModerationActionType.BlockMessage) {
         //if(execution.ruleTriggerType === Discord.AutoModerationRuleTriggerType.Spam) return;
         const xpRemoval = -100;
@@ -298,7 +298,7 @@ client.on("autoModerationActionExecution", (execution) => {
 });
 
 //Voice Channel Detection
-client.on("voiceStateUpdate", (oldState, newState) => {
+client.on(Discord.Events.VoiceStateUpdate, (oldState, newState) => {
     const normalTrainRole = newState.guild.roles.cache.find(r => r.id === config.TrainerRolle);
     const trainRole = newState.guild.roles.cache.find(r => r.id === config.OnlineTrainerRolle);
     const orgRole = newState.guild.roles.cache.find(r => r.id === config.OrganisationRolle);
@@ -361,7 +361,7 @@ client.on("voiceStateUpdate", (oldState, newState) => {
 
 //Command- & Levelsystem
 
-client.on("messageCreate", async (msg) => {
+client.on(Discord.Events.MessageCreate, async (msg) => {
     if (msg.author.bot) return;
     if (!msg.guild) {
         msg.reply("Entschuldigung, aber der Bot funktioniert nur in Servern.");
@@ -419,7 +419,7 @@ client.on("messageCreate", async (msg) => {
 });
 
 //Willkommensnachricht des Bots
-client.on("guildCreate", async (guild) => {
+client.on(Discord.Events.GuildCreate, async (guild) => {
     const channel = utils.findGoodChannel(guild);
     let guildPrefix = prefix.getPrefix(guild.id);
     if (!guildPrefix) guildPrefix = defaultPrefix;
