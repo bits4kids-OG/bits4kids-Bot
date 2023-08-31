@@ -16,7 +16,10 @@ module.exports = {
 
         const exctDate = new Date();
 
-        let XP = JSON.parse(fs.readFileSync("./xp.json", "utf8"));
+        let XP = {};
+        if(fs.existsSync("./xp.json")) {
+            XP = JSON.parse(fs.readFileSync("./xp.json", "utf8"));
+        }
         if(msg.guild.id in XP === false) {
             XP[msg.guild.id] = {};
             fs.writeFileSync("./xp.json", JSON.stringify(XP, null, 2), err => {

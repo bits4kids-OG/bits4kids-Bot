@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const Discord = require("discord.js");
-const utils = require("../utils.js");
+const index = require("../index.js");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -10,7 +10,7 @@ module.exports = {
         if (!msg.member.permissions.has(Discord.PermissionsBitField.Flags.ManageGuild)) {
             msg.author.send("Das darfst du nicht machen!");
         } else {
-            utils.refresh(msg);
+            index.refresh(msg);
             msg.reply("Successfully refreshed the invites and files!");
         }
     },

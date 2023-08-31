@@ -14,8 +14,22 @@ const fs = require("fs");
 const utils = require("./utils.js");
 const xp_levels = require("./xp-and-levels.js");
 
-let connections = JSON.parse(fs.readFileSync("./connections.json", "utf8"));
-let buttons = JSON.parse(fs.readFileSync("./buttons.json", "utf8"));
+let connections = {};
+if(fs.existsSync("./connections.json")) {
+    connections = JSON.parse(fs.readFileSync("./connections.json", "utf8"));
+} else {
+    fs.writeFileSync("./connections.json", JSON.stringify(connections, null, 2), err => {
+        if(err) console.log(err);
+    });
+}
+let buttons = {};
+if(fs.existsSync("./buttons.json")) {
+    buttons = JSON.parse(fs.readFileSync("./buttons.json", "utf8"));
+} else {
+    fs.writeFileSync("./buttons.json", JSON.stringify(buttons, null, 2), err => {
+        if(err) console.log(err);
+    });
+}
 
 const invites = {};
 let fromWhere = {};
@@ -452,3 +466,11 @@ function refreshInvites(msg) {
         invites[msg.guild.id] = guildInvites;
     });
 }
+
+exports.refresh = async function(msg) {
+    await msg.guild.invites.fetch().then(guildInvites => {
+        invites[msg.guild.id] = guildInvites;
+    });
+    connections = JSON.parse(fs.readFileSync("./connections.json", "utf8"));
+    buttons = JSON.parse(fs.readFileSync("./buttons.json", "utf8"));
+};

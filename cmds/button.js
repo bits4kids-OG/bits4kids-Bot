@@ -272,7 +272,6 @@ module.exports = {
             });
         }
         function refreshFiles() {
-            connections = JSON.parse(fs.readFileSync("./connections.json", "utf8"));
             buttons = JSON.parse(fs.readFileSync("./buttons.json", "utf8"));
         }
     },

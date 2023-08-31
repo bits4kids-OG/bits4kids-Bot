@@ -132,7 +132,6 @@ module.exports = {
                 invites[msg.guild.id] = guildInvites;
             });
             connections = JSON.parse(fs.readFileSync("./connections.json", "utf8"));
-            buttons = JSON.parse(fs.readFileSync("./buttons.json", "utf8"));
         }
     },
 };

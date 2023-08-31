@@ -30,15 +30,6 @@ exports.getRole = function(member, roleName) {
     return role;
 };
   
-exports.refresh = async function(msg) {
-    const invites = {};
-    await msg.guild.invites.fetch().then(guildInvites => {
-        invites[msg.guild.id] = guildInvites;
-    });
-    connections = JSON.parse(fs.readFileSync("./connections.json", "utf8"));
-    buttons = JSON.parse(fs.readFileSync("./buttons.json", "utf8"));
-};
-  
 exports.checkArrayEmpty = function(array) {
     if (array.length === 0) {
         return true;
