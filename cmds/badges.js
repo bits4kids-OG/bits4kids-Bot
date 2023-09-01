@@ -5,6 +5,10 @@ const utils = require("../utils.js");
 const xp_levels = require("../xp-and-levels.js");
 const config = require("../config.json");
 
+const badgeLevelconfig = require("../badgeLevelconfig.json");
+
+const path = require("path");
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("badges")
@@ -42,13 +46,14 @@ module.exports = {
             }
             msg.reply({ embeds: [BadgeScreen(msg, author)] })
                 .then(() => {
-                    const earnedBadges_last = xp_levels.earnedBadges(msg, author);
-                    if(utils.checkArrayEmpty(earnedBadges_last)) return;
+                    const earnedBadges = xp_levels.earnedBadges(msg, author);
+                    if(utils.checkArrayEmpty(earnedBadges)) return;
+                    const earnedBadges_last = earnedBadges.pop();
 
-                    const file = new Discord.AttachmentBuilder(earnedBadges_last[0]);
+                    const file = new Discord.AttachmentBuilder(path.join("./badges", earnedBadges_last.fileName));
 
                     msg.reply({
-                        content: `Dein zuletzt erhaltenes Badge: ${(earnedBadges_last[0]).replace("./badges/", "").replace(".jpg", "").replace(".png", "")}`,
+                        content: `Dein zuletzt erhaltenes Badge: ${earnedBadges_last.name}`,
                         //embeds: [badgeEarned],
                         files: [file]
                     });
@@ -57,16 +62,21 @@ module.exports = {
 
 
         function BadgeScreen(msg, user) {
-            let earnedBadges = xp_levels.earnedBadges(msg, user);
-            const nextBadge = xp_levels.nextBadge(msg, user);
+            const earnedBadges = xp_levels.earnedBadges(msg, user);
+            let nextBadge;
+            if(earnedBadges.length === badgeLevelconfig["badges"].length) {
+                nextBadge = { name: "Du hast bereits alle Badges!", level: "Du hast bereits alle Badges!" };
+            } else {
+                nextBadge = badgeLevelconfig["badges"][earnedBadges.length];
+            }
         
             const userXP = utils.getXP(msg, user)[msg.guild.id][user.id];
             
             let progressBar;
-            if(isNaN(nextBadge[1])) {
+            if(isNaN(nextBadge.level)) {
                 progressBar = utils.Progressbar(userXP.level, userXP.level, 24);
             } else {
-                progressBar = utils.Progressbar(userXP.level, nextBadge[1], 24);
+                progressBar = utils.Progressbar(userXP.level, nextBadge.level, 24);
             }
             
             const badgeEarned = new Discord.EmbedBuilder()
@@ -78,13 +88,13 @@ module.exports = {
                 earnedBadges.push("Du hast noch keine Badges erhalten!");
             }
             let badgesString = "";
-            for(let i = 0; i < earnedBadges.length; i++) {
-                badgesString = badgesString + earnedBadges[i].replace("./badges/", "").replace(".jpg", "").replace(".png", "").toString() + "\n";
+            for(const badge of earnedBadges) {
+                badgesString = badgesString + badge.name + "\n";
             }
             badgeEarned.addFields([
                 { name: "Bisher erhaltene Badges:", value: badgesString },
-                { name: "Nächstes Badge:", value: nextBadge[0] },
-                { name: "Benötigtes Level:", value: nextBadge[1].toString() },
+                { name: "Nächstes Badge:", value: nextBadge.name },
+                { name: "Benötigtes Level:", value: nextBadge.level.toString() },
                 { name: "Derzeitiges Level:", value: userXP.level.toString() },
                 { name: "ProgressBar zum nächsten Badge:", value: progressBar }
             ])

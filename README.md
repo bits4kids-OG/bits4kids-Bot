@@ -38,4 +38,9 @@ The bits4kids-Discord bot helps *Coding Trainers* manage *Online Coding Clubs* o
 1. Configure all options in `config.json`
     - To get your Discord token, you will need to create [a new Discord application](https://discord.com/developers/applications)
     - To obtain an OpenWeatherMap API key, you will need [an account](https://discord.com/developers/applications) on their site
+1. Copy `badgeLevelconfig.sample.json` to `badgeLevelconfig.json`
+1. Configure all options in `badgeLevelconfig.json` as preferred
+    - The level hurdle for each badge can be chosen freely
+    - There is no limitations in the amount of badges
+    - The badges do not have to be in any specific order
 1. Run the bot using `node index.js`

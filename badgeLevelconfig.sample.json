@@ -1,0 +1,16 @@
+{
+    "badges": [
+        {
+            "name": "Name of the badge",
+            "level": 5,
+            "fileName": "BadgeFile.png",
+            "roleID": "The ID of the role associated with this badge"
+        },
+        {
+            "name": "Name of the badge",
+            "level": 10,
+            "fileName": "BadgeFile.png",
+            "roleID": "The ID of the role associated with this badge"
+        }
+    ]
+}

@@ -2,30 +2,11 @@ const Discord = require("discord.js");
 const utils = require("./utils.js");
 const config = require("./config.json");
 
+const badgeLevelconfig = require("./badgeLevelconfig.json");
+
 const fs = require("fs");
 
-//Dateinamen geordnet laut aufsteigender Levelanzahl
-const Badges = ["Rookie-Bot.png", "Advanced-Bot.png", "Industrie-Robo.png", "Robo-Köpfchen.png", "Robo-Kopf.png", "Mars-Robo.png"];
-
-//Rollen
-const Lvl5Role = "996722514698965003";
-const Lvl5Lvl = 5;
-
-const Lvl10Role = "996722646127493214";
-const Lvl10Lvl = 10;
-
-const Lvl20Role = "996722965976723476";
-const Lvl20Lvl = 20;
-
-const Lvl50Role = "996723053797060729";
-const Lvl50Lvl = 50;
-
-const Lvl100Role = "996723166141485098";
-const Lvl100Lvl = 100;
-
-const Lvl150Role = "996723230792482826";
-const Lvl150Lvl = 150;
-
+const path = require("path");
 
 //Vergabe von XP-Punkten
 
@@ -150,59 +131,27 @@ function nextLevel(msg, user, guildPrefix) {
         ])
         .setTimestamp();
 
-    //console.log(Badges);
 
     //Badge-System
     //Hinzufügen
-    let badge = "";
+    let badgeFile = "";
     let role;
     const member = msg.guild.members.cache.get(user.id);
 
-    if(userXP.level === Lvl150Lvl) {
-        badge = "./badges/" + Badges[5];
-
-        role = utils.getRole(member, Lvl150Role);
-        if(role) member.roles.add(role);
-
-    } else if(userXP.level === Lvl100Lvl) {
-        badge = "./badges/" + Badges[4];
-
-        role = utils.getRole(member, Lvl100Role);
-        if(role) member.roles.add(role);
-
-    } else if(userXP.level === Lvl50Lvl) {
-        badge = "./badges/" + Badges[3];
-
-        role = utils.getRole(member, Lvl50Role);
-        if(role) member.roles.add(role);
-
-    } else if(userXP.level === Lvl20Lvl) {
-        badge = "./badges/" + Badges[2];
-
-        role = utils.getRole(member, Lvl20Role);
-        if(role) member.roles.add(role);
-
-    } else if(userXP.level === Lvl10Lvl) {
-        badge = "./badges/" + Badges[1];
-
-        role = utils.getRole(member, Lvl10Role);
-        if(role) member.roles.add(role);
-
-    } else if(userXP.level === Lvl5Lvl) {
-        badge = "./badges/" + Badges[0];
-
-        role = utils.getRole(member, Lvl5Role);
-        if(role) member.roles.add(role);
+    for(const badge of badgeLevelconfig["badges"]) {
+        if(userXP.level === badge.level) {
+            badgeFile = path.join("./badges", badge.fileName);
+            role = utils.getRole(member, badge.roleID);
+            if(role) member.roles.add(role);
+        }
     }
 
-    //console.log(badge);
-
-    const file = new Discord.AttachmentBuilder(badge);
+    const file = new Discord.AttachmentBuilder(badgeFile);
 
     const channel = utils.findXpChannel(msg, config.xpChannel);
     channel?.send({ content: `Glückwunsch, ${user}`, embeds: [levelUp] })
         .then(() => {
-            if(utils.checkArrayEmpty(badge)) return;
+            if(utils.checkArrayEmpty(badgeFile)) return;
             
             let role_str;
             if(role) {
@@ -228,65 +177,15 @@ exports.earnedBadges = function(msg, user) {
     const userXP = utils.getXP(msg, user)[msg.guild.id][user.id];
 
     let earnedBadges = [];
-    let badge = "";
 
-    if(userXP.level >= Lvl150Lvl) {
-        badge = "./badges/" + Badges[5];
-        earnedBadges.push(badge);
-    }
-    if(userXP.level >= Lvl100Lvl) {
-        badge = "./badges/" + Badges[4];
-        earnedBadges.push(badge);
-    }
-    if(userXP.level >= Lvl50Lvl) {
-        badge = "./badges/" + Badges[3];
-        earnedBadges.push(badge);
-    }
-    if(userXP.level >= Lvl20Lvl) {
-        badge = "./badges/" + Badges[2];
-        earnedBadges.push(badge);
-    }
-    if(userXP.level >= Lvl10Lvl) {
-        badge = "./badges/" + Badges[1];
-        earnedBadges.push(badge);
-    }
-    if(userXP.level >= Lvl5Lvl) {
-        badge = "./badges/" + Badges[0];
-        earnedBadges.push(badge);
+    for(const badge of badgeLevelconfig["badges"]) {
+        if(userXP.level >= badge.level) {
+            earnedBadges.push(badge);
+        }
     }
 
-    return earnedBadges;
-};
-
-exports.nextBadge = function(msg, user) {
-    const userXP = utils.getXP(msg, user)[msg.guild.id][user.id];
-
-    let nextBadge = "";
-    let level = 0;
-
-    if(userXP.level >= Lvl150Lvl) {
-        nextBadge = "Du hast bereits alle Badges!";
-        level = "Du hast bereits alle Badges!";
-    } else if(userXP.level >= Lvl100Lvl) {
-        nextBadge = Badges[5].replace(".jpg", "").replace(".png", "");
-        level = Lvl150Lvl;
-    } else if(userXP.level >= Lvl50Lvl) {
-        nextBadge = Badges[4].replace(".jpg", "").replace(".png", "");
-        level = Lvl100Lvl;
-    } else if(userXP.level >= Lvl20Lvl) {
-        nextBadge = Badges[3].replace(".jpg", "").replace(".png", "");
-        level = Lvl50Lvl;
-    } else if(userXP.level >= Lvl10Lvl) {
-        nextBadge = Badges[2].replace(".jpg", "").replace(".png", "");
-        level = Lvl20Lvl;
-    } else if(userXP.level >= Lvl5Lvl) {
-        nextBadge = Badges[1].replace(".jpg", "").replace(".png", "");
-        level = Lvl10Lvl;
-    } else if(userXP.level < Lvl5Lvl) {
-        nextBadge = Badges[0].replace(".jpg", "").replace(".png", "");
-        level = Lvl5Lvl;
+    function compareLevels(a, b) {
+        return a.level - b.level;
     }
-
-    let nextBadgeLevel = [nextBadge, level];
-    return nextBadgeLevel;
+    return earnedBadges.sort(compareLevels);
 };
