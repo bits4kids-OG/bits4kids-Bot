@@ -1,6 +1,8 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const Discord = require("discord.js");
 
+const config = require("../config.json");
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("umfrage")
@@ -16,8 +18,8 @@ module.exports = {
             let lastMessage = messages.last();
             
             if (!lastMessage.author.bot) {
-                lastMessage.react("<:Roboter_gruen:933371228142579833>")
-                    .then(() => lastMessage.react("<:Roboter_rot:933371300817272883>"))
+                lastMessage.react(config.reactGreen)
+                    .then(() => lastMessage.react(config.reactRed))
                     .catch(error => console.error("One of the emojis failed to react:", error));
             }
         })
