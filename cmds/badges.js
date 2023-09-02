@@ -5,7 +5,7 @@ const utils = require("../utils.js");
 const xp_levels = require("../xp-and-levels.js");
 const config = require("../config.json");
 
-const badgeLevelconfig = require("../badgeLevelconfig.json");
+const badgeLevelconfig = require("../badgeLevelconfig.json")["badges"];
 
 const path = require("path");
 
@@ -64,10 +64,10 @@ module.exports = {
         function BadgeScreen(msg, user) {
             const earnedBadges = xp_levels.earnedBadges(msg, user);
             let nextBadge;
-            if(earnedBadges.length === badgeLevelconfig["badges"].length) {
+            if(earnedBadges.length === badgeLevelconfig.length) {
                 nextBadge = { name: "Du hast bereits alle Badges!", level: "Du hast bereits alle Badges!" };
             } else {
-                nextBadge = badgeLevelconfig["badges"][earnedBadges.length];
+                nextBadge = badgeLevelconfig[earnedBadges.length];
             }
         
             const userXP = utils.getXP(msg, user)[msg.guild.id][user.id];
@@ -85,7 +85,7 @@ module.exports = {
                 .setDescription("Badges erhältst du ab einem bestimmten Level.")
                 .setThumbnail(user.avatarURL());
             if(utils.checkArrayEmpty(earnedBadges)) {
-                earnedBadges.push("Du hast noch keine Badges erhalten!");
+                earnedBadges.push({ name: "Du hast noch keine Badges erhalten!" });
             }
             let badgesString = "";
             for(const badge of earnedBadges) {

@@ -1,6 +1,6 @@
 {
   "name": "bits4kids",
-  "version": "4.2.2",
+  "version": "4.3.0",
   "description": "Discord Bot",
   "main": "index.js",
   "scripts": {

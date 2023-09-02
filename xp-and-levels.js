@@ -2,7 +2,7 @@ const Discord = require("discord.js");
 const utils = require("./utils.js");
 const config = require("./config.json");
 
-const badgeLevelconfig = require("./badgeLevelconfig.json");
+const badgeLevelconfig = require("./badgeLevelconfig.json")["badges"];
 
 const fs = require("fs");
 
@@ -138,10 +138,10 @@ function nextLevel(msg, user, guildPrefix) {
     let role;
     const member = msg.guild.members.cache.get(user.id);
 
-    for(const badge of badgeLevelconfig["badges"]) {
+    for(const badge of badgeLevelconfig) {
         if(userXP.level === badge.level) {
             badgeFile = path.join("./badges", badge.fileName);
-            role = utils.getRole(member, badge.roleID);
+            role = utils.getRole(member, badge.roleIDs[msg.guild.id]);
             if(role) member.roles.add(role);
         }
     }
@@ -178,14 +178,14 @@ exports.earnedBadges = function(msg, user) {
 
     let earnedBadges = [];
 
-    for(const badge of badgeLevelconfig["badges"]) {
+    for(const badge of badgeLevelconfig) {
         if(userXP.level >= badge.level) {
             earnedBadges.push(badge);
         }
     }
 
     function compareLevels(a, b) {
-        return a.level - b.level;
+        return b.level - a.level;
     }
     return earnedBadges.sort(compareLevels);
 };

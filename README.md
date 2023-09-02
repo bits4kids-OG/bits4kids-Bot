@@ -40,7 +40,9 @@ The bits4kids-Discord bot helps *Coding Trainers* manage *Online Coding Clubs* o
     - To obtain an OpenWeatherMap API key, you will need [an account](https://discord.com/developers/applications) on their site
 1. Copy `badgeLevelconfig.sample.json` to `badgeLevelconfig.json`
 1. Configure all options in `badgeLevelconfig.json` as preferred
-    - The level hurdle for each badge can be chosen freely
+    - To create custom badges, an image file has to be placed in the `badges` folder and its filename referenced in the `fileName` property
+    - For each guild, a set of roles corresponding to the badges should be created. For each badge object, rename the property name(s) of the `roleIDs` object to the guild ID(s). Then, the ID of each role has to be referenced in the guild ID property of the `roleIDs` object of the corresponding badge object.
+    - The badge name and level hurdle for each badge can be chosen freely
     - There is no limitations in the amount of badges
     - The badges do not have to be in any specific order
 1. Run the bot using `node index.js`

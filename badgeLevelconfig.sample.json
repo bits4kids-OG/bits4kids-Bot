@@ -1,16 +1,58 @@
 {
     "badges": [
         {
-            "name": "Name of the badge",
+            "name": "Rookie-Bot",
             "level": 5,
-            "fileName": "BadgeFile.png",
-            "roleID": "The ID of the role associated with this badge"
+            "fileName": "Rookie-Bot.png",
+            "roleIDs": {
+                "The ID of the guild on which this role exists": "The ID of the role associated with this badge",
+                "The ID of a second guild on which this other role exists": "The ID of the role associated with this badge"
+            }
         },
         {
-            "name": "Name of the badge",
+            "name": "Advanced-Bot",
             "level": 10,
-            "fileName": "BadgeFile.png",
-            "roleID": "The ID of the role associated with this badge"
+            "fileName": "Advanced-Bot.png",
+            "roleIDs": {
+                "The ID of the guild on which this role exists": "The ID of the role associated with this badge",
+                "The ID of a second guild on which this other role exists": "The ID of the role associated with this badge"
+            }
+        },
+        {
+            "name": "Industrie-Robo",
+            "level": 20,
+            "fileName": "Industrie-Robo.png",
+            "roleIDs": {
+                "The ID of the guild on which this role exists": "The ID of the role associated with this badge",
+                "The ID of a second guild on which this other role exists": "The ID of the role associated with this badge"
+            }
+        },
+        {
+            "name": "Robo-Köpfchen",
+            "level": 50,
+            "fileName": "Robo-Köpfchen.png",
+            "roleIDs": {
+                "The ID of the guild on which this role exists": "The ID of the role associated with this badge",
+                "The ID of a second guild on which this other role exists": "The ID of the role associated with this badge"
+            }
+        },
+        {
+            "name": "Robo-Kopf",
+            "level": 100,
+            "fileName": "Robo-Kopf.png",
+            "roleIDs": {
+                "The ID of the guild on which this role exists": "The ID of the role associated with this badge",
+                "The ID of a second guild on which this other role exists": "The ID of the role associated with this badge"
+            }
+        },
+        {
+            "name": "Mars-Robo",
+            "level": 150,
+            "fileName": "Mars-Robo.png",
+            "roleIDs": {
+                "The ID of the guild on which this role exists": "The ID of the role associated with this badge",
+                "The ID of a second guild on which this other role exists": "The ID of the role associated with this badge"
+            }
         }
     ]
 }
