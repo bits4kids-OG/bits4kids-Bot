@@ -4,8 +4,6 @@ const Discord = require("discord.js");
 const config = require("../config.json");
 const utils = require("../utils.js");
 
-const numberCodeReg = /^[0-9]\d*$/;
-
 const fs = require("fs");
 
 module.exports = {
@@ -21,12 +19,12 @@ module.exports = {
         if(!args[0] || !args[1] || isNaN(args[1]) || !msg.mentions.users.first()) {
             msg.reply(`Correct usage: ${guildPrefix}timeout <@user> <amount in days>`);
             return;
-        } else if ((isInDesiredForm(args[1]) === false) || (testNumber(args[1]) == null) || (testNumber(args[1]) > 100)) {
+        } else if ((utils.isInDesiredForm(args[1]) === false) || (utils.testNumber(args[1]) == null) || (utils.testNumber(args[1]) > 100)) {
             msg.reply("Invalid timeout duration!");
             return;
         } else {
             const user = msg.mentions.users.first();
-            const number = testNumber(args[1]);
+            const number = utils.testNumber(args[1]);
 
             if ((user.id === client.user.id) || (user.bot)) {
                 msg.reply("You can't give the bot xp!");
@@ -61,16 +59,5 @@ module.exports = {
             msg.reply(`${user} hat ein Timeout von ${number} Tagen erhalten!\nIm Timeout bis: ${timeoutDate.toLocaleString("en-GB")}`);
 
         }
-
-        function isInDesiredForm(str) {
-            var n = Math.floor(Number(str));
-            return n !== Infinity && String(n) === str && n >= 0;
-        }
-      
-        function testNumber(number) {
-            if (!numberCodeReg.test(Number(number))) return null;
-            return Number(number);
-        }
-
     },
 };

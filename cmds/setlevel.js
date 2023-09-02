@@ -44,8 +44,7 @@ module.exports = {
             const userXP = XP[msg.guild.id][user.id];
 
             if(userXP.level >= number) {
-                msg.reply("Error: You're trying to set the level to a lower/the same level than the user already has.");
-                return;
+                userXP.xp = 0;
             }
 
             userXP.level = number;

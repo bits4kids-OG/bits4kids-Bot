@@ -249,11 +249,11 @@ exports.msToTime = function(duration) {
 };
 
 
-const numberCodeReg = /^[1-9]\d*$/;
+const numberCodeReg = /^[0-9]\d*$/;
 
 exports.isInDesiredForm = function(str) {
     var n = Math.floor(Number(str));
-    return n !== Infinity && String(n) === str && n > 0;
+    return n !== Infinity && String(n) === str && n >= 0;
 };
 
 exports.testNumber = function(number) {
