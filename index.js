@@ -433,7 +433,7 @@ client.on(Discord.Events.GuildCreate, async (guild) => {
     });
 });
 
-client.login(config.tokenReal);
+client.login(config.token);
 
 
 function voicelogLeftChannel(member, newState, oldState, VoiceLogChannel) {

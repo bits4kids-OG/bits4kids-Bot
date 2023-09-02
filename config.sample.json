@@ -1,5 +1,5 @@
 {
-    "tokenReal": "Your Discord bot token",
+    "token": "Your Discord bot token",
     "owner": [
       "An array of",
       "bot admin user IDs "
