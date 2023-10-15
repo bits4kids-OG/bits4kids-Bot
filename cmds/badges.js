@@ -48,12 +48,12 @@ module.exports = {
                 .then(() => {
                     const earnedBadges = xp_levels.earnedBadges(msg, author);
                     if(utils.checkArrayEmpty(earnedBadges)) return;
-                    const earnedBadges_last = earnedBadges.pop();
+                    const earnedBadges_last = earnedBadges.shift();
 
                     const file = new Discord.AttachmentBuilder(path.join("./badges", earnedBadges_last.fileName));
 
                     msg.reply({
-                        content: `Dein zuletzt erhaltenes Badge: ${earnedBadges_last.name}`,
+                        content: `Dein zuletzt erhaltenes Badge: **${earnedBadges_last.name}**`,
                         //embeds: [badgeEarned],
                         files: [file]
                     });

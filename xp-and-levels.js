@@ -135,12 +135,14 @@ function nextLevel(msg, user, guildPrefix) {
     //Badge-System
     //Hinzufügen
     let badgeFile = "";
+    let badgeName = "";
     let role;
     const member = msg.guild.members.cache.get(user.id);
 
     for(const badge of badgeLevelconfig) {
         if(userXP.level === badge.level) {
             badgeFile = path.join("./badges", badge.fileName);
+            badgeName = badge.name;
             role = utils.getRole(member, badge.roleIDs[msg.guild.id]);
             if(role) member.roles.add(role);
         }
@@ -160,7 +162,7 @@ function nextLevel(msg, user, guildPrefix) {
                 role_str = "*Rolle nicht verfügbar*";
             }
             channel?.send({
-                content: `Tolle Leistung, ${user}! Du hast gerade ein Badge und die Rolle ${role_str} bekommen! Rufe deine Badges mit ${guildPrefix}badges ab.`,
+                content: `Tolle Leistung, ${user}! Du hast gerade das Badge **${badgeName}** und die Rolle ${role_str} bekommen! Rufe deine Badges mit ${guildPrefix}badges ab.`,
                 //embeds: [badgeEarned],
                 files: [file]
             });
