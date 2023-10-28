@@ -12,6 +12,7 @@ module.exports = {
     execute(msg, args, client, guildPrefix, invites) {
         if (!msg.member.permissions.has(Discord.PermissionsBitField.Flags.ManageGuild)) {
             msg.author.send("Das darfst du nicht machen!");
+            return;
         } else if (!args[0] || !args[1] || utils.getInviteCode(args[0]) == null) {
             refresh(msg);
     

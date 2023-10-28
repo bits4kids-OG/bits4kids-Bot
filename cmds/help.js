@@ -38,8 +38,9 @@ module.exports = {
                     { name: "Interaktion mit Teilnehmer:innen", value: "\u200b" },
                     { name: `${guildPrefix}gamejam`, value: `Schaltet die GameJam Kategorie auf dem bits4kids-Server für alle sichtbar/unsichtbar.\nBenutzung: ${guildPrefix}gamejam start oder ${guildPrefix}gamejam stop oder ${guildPrefix}gamejam status.\nBenötigt die Berechtigung "Manage Roles".`, inline: true },
                     { name: `${guildPrefix}umfrage`, value: "Fügt der vorherigen Nachricht Emojis als Umfrage hinzu. Benötigt die Berechtigung \"Manage Roles\".", inline: true },
+                    { name: `${guildPrefix}copyrole`, value: `Kopiert die angegebene Rolle mit den entsprechenden Berechtigungen. Benötigt die Berechtigung "Manage Roles". Korrekte Benutzung: ${guildPrefix}copyrole <Name oder ID der Rolle> <Name der duplizierten Rolle> or ${guildPrefix}copyrole <Name oder ID der Rolle>`, inline: true },
 
-                    { name: "\u200b", value: "\u200b" },
+                    //{ name: "\u200b", value: "\u200b" },
                     { name: "Wartung des Bots", value: "\u200b" },
                     { name: `${guildPrefix}help admin`, value: "Lädt diese Seite. Benötigt die Berechtigung \"Manage Server\".", inline: true },
                     { name: `${guildPrefix}reboot`, value: "Startet den Bot neu. Benötigt die Berechtigung \"Owner\" -> emeraldingg anschreiben", inline: true },
