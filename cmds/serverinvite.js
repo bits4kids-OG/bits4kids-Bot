@@ -9,9 +9,9 @@ module.exports = {
     execute(msg) {
         if (msg.guild && msg.member.permissions.has(Discord.PermissionsBitField.Flags.CreateInstantInvite)) {
             utils.serverInvite(msg);
-            msg.reply("Sent you a DM!");
+            msg.reply("Habe dir eine DM geschickt!");
         } else {
-            msg.reply("Sorry, but you don't have the permission to do that.");
+            msg.reply("Entschuldigung, aber du hast nicht die Berechtigungen für das.");
         }
     },
 };
