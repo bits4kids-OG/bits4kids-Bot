@@ -1,6 +1,6 @@
 {
   "name": "bits4kids",
-  "version": "4.3.2",
+  "version": "4.3.3",
   "description": "Discord Bot",
   "main": "index.js",
   "scripts": {
@@ -9,8 +9,8 @@
   "author": "emeraldingg",
   "license": "ISC",
   "dependencies": {
-    "discord-prefix": "^3.0.0",
-    "discord.js": "^14.13.0",
+    "discord.js": "^14.14.0",
+    "googleapis": "^128.0.0",
     "node-fetch": "^2.7.0"
   },
   "devDependencies": {

@@ -5,14 +5,21 @@ myIntents.add(Discord.GatewayIntentBits.MessageContent, Discord.GatewayIntentBit
 
 const client = new Discord.Client({ intents: myIntents });
 
-const prefix = require("discord-prefix");
-
 const config = require("./config.json");
 const { version } = require("./package.json");
 const fs = require("fs");
 
 const utils = require("./utils.js");
 const xp_levels = require("./xp-and-levels.js");
+
+let prefixes = {};
+if(fs.existsSync("./prefixes.json")) {
+    prefixes = JSON.parse(fs.readFileSync("./prefixes.json", "utf8"));
+} else {
+    fs.writeFileSync("./prefixes.json", JSON.stringify(prefixes, null, 2), err => {
+        if(err) console.log(err);
+    });
+}
 
 let connections = {};
 if(fs.existsSync("./connections.json")) {
@@ -290,7 +297,7 @@ client.on(Discord.Events.AutoModerationActionExecution, (execution) => {
         if ((normalTrainRole) && (trainRole) && (orgRole) && (execution.member.roles) && ((execution.member.roles.cache.has(normalTrainRole.id)) || (execution.member.roles.cache.has(trainRole.id)) || (execution.member.roles.cache.has(orgRole.id)))) {
             return;
         }
-        let guildPrefix = prefix.getPrefix(execution.guild.id);
+        let guildPrefix = getPrefix(execution.guild.id);
         if (!guildPrefix) guildPrefix = defaultPrefix;
         xp_levels.removeXP(execution, execution.user, xpRemoval, guildPrefix);
         execution.user.send(`Wir bitten um einen freundlichen und respektvollen Umgang auf unserem Server. Schimpfwörter und Spam sind hier nicht erlaubt, daher wurden dir ${Math.abs(xpRemoval)} XP abgezogen.`);
@@ -369,7 +376,7 @@ client.on(Discord.Events.MessageCreate, async (msg) => {
     }
     if(msg.content === "") return;
 
-    let guildPrefix = prefix.getPrefix(msg.guild.id);
+    let guildPrefix = getPrefix(msg.guild.id);
     if (!guildPrefix) guildPrefix = defaultPrefix;
 
     if (!msg.content.startsWith(guildPrefix)) {
@@ -421,7 +428,7 @@ client.on(Discord.Events.MessageCreate, async (msg) => {
 //Willkommensnachricht des Bots
 client.on(Discord.Events.GuildCreate, async (guild) => {
     const channel = utils.findGoodChannel(guild);
-    let guildPrefix = prefix.getPrefix(guild.id);
+    let guildPrefix = getPrefix(guild.id);
     if (!guildPrefix) guildPrefix = defaultPrefix;
     if (channel) {
         channel.send(
@@ -467,10 +474,22 @@ function refreshInvites(msg) {
     });
 }
 
+function getPrefix(guildID) {
+    if(guildID in prefixes === false) {
+        return null;
+    } else {
+        return prefixes[guildID];
+    }
+}
+
 exports.refresh = async function(msg) {
     await msg.guild.invites.fetch().then(guildInvites => {
         invites[msg.guild.id] = guildInvites;
     });
     connections = JSON.parse(fs.readFileSync("./connections.json", "utf8"));
     buttons = JSON.parse(fs.readFileSync("./buttons.json", "utf8"));
+};
+
+exports.getPrefixes = function() {
+    prefixes = JSON.parse(fs.readFileSync("./prefixes.json", "utf8"));
 };
