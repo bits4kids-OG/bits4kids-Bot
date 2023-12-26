@@ -1,7 +1,7 @@
 const Discord = require("discord.js");
 
 const myIntents = new Discord.IntentsBitField();
-myIntents.add(Discord.GatewayIntentBits.MessageContent, Discord.GatewayIntentBits.GuildVoiceStates, Discord.GatewayIntentBits.DirectMessageReactions, Discord.GatewayIntentBits.GuildMembers, Discord.GatewayIntentBits.DirectMessages, Discord.GatewayIntentBits.AutoModerationExecution, Discord.GatewayIntentBits.GuildMessageReactions, Discord.GatewayIntentBits.GuildMessages, Discord.GatewayIntentBits.GuildInvites, Discord.GatewayIntentBits.GuildMembers, Discord.GatewayIntentBits.Guilds);
+myIntents.add(Discord.GatewayIntentBits.MessageContent, Discord.GatewayIntentBits.GuildVoiceStates, Discord.GatewayIntentBits.DirectMessageReactions, Discord.GatewayIntentBits.GuildMembers, Discord.GatewayIntentBits.DirectMessages, Discord.GatewayIntentBits.GuildScheduledEvents, Discord.GatewayIntentBits.AutoModerationExecution, Discord.GatewayIntentBits.GuildMessageReactions, Discord.GatewayIntentBits.GuildMessages, Discord.GatewayIntentBits.GuildInvites, Discord.GatewayIntentBits.GuildMembers, Discord.GatewayIntentBits.Guilds);
 
 const client = new Discord.Client({ intents: myIntents });
 
@@ -9,8 +9,11 @@ const config = require("./config.json");
 const { version } = require("./package.json");
 const fs = require("fs");
 
+const cron = require("cron");
+
 const utils = require("./utils.js");
 const xp_levels = require("./xp-and-levels.js");
+const driveAutoEvents = require("./driveAutoEvents.js");
 
 let prefixes = {};
 if(fs.existsSync("./prefixes.json")) {
@@ -90,6 +93,15 @@ client.on(Discord.Events.ClientReady, () => {
             if(err) console.log(err);
         });
     });
+
+    const job = cron.CronJob.from({
+        cronTime: "00 00 03,11,20 * * *",
+        onTick: async function() {
+            await driveAutoEvents.createEvents(client);
+        },
+        timeZone: "Europe/Vienna"
+    });
+    job.start();
 });
 
 //automatisches Refreshen der Invites, bei Hinzufügen/Entfernen
@@ -119,7 +131,7 @@ client.on(Discord.Events.GuildMemberAdd, member => {
         member.guild.invites.fetch().then(guildInvites => {
             invites[member.guild.id] = guildInvites;
             const invite = guildInvites.find(inv => old[inv.code].uses < inv.uses);
-            const logChannel = utils.findLogChannel(member);
+            const logChannel = utils.findLogChannel(member.guild);
             if(!invite) {
                 logChannel?.send(`Error: No invite found. New member ${member.tag} probably joined using a single use invite.`);
                 const channel = member.guild.channels.cache.get(config.welcomeChannel);
@@ -171,14 +183,14 @@ client.on(Discord.Events.GuildMemberAdd, member => {
             return old[inv.code].uses < inv.uses;
         });
         if (typeof invite === "undefined") {
-            const logChannel = utils.findLogChannel(member);
+            const logChannel = utils.findLogChannel(member.guild);
             logChannel?.send(`Warning: Encountered an error while trying to find the invite.\n${member.tag}`);
             logChannel?.send("old: `" + JSON.stringify(old, null, 2) + "`");
             logChannel?.send("invites: `" + JSON.stringify(invites[member.guild.id].map(inv => {return {code: inv.code, uses: inv.uses};}), null, 2) + "`");
             return;
         }
         const inviter = client.users.cache.get(invite.inviter.id);
-        const logChannel = utils.findLogChannel(member);
+        const logChannel = utils.findLogChannel(member.guild);
         logChannel?.send(`${member.user} joined using invite code ${invite.code} from ${inviter}. Invite was used ${invite.uses} times since its creation. This was the URL: ${invite.url}\nAwaiting Membership Screening.`);
         if(member.guild.id in fromWhere === false) {
             fromWhere[member.guild.id] = {};
@@ -193,7 +205,7 @@ client.on(Discord.Events.GuildMemberUpdate, (oldMember, newMember) => {
     if (oldMember.pending && !newMember.pending) {
         const member = newMember;
         refreshFiles();
-        const logChannel = utils.findLogChannel(member);
+        const logChannel = utils.findLogChannel(member.guild);
         let invite;
         if(member.guild.id in fromWhere === false) {
             fromWhere[member.guild.id] = {};
@@ -247,7 +259,7 @@ client.on(Discord.Events.InteractionCreate, async interaction => {
     await interaction.deferReply({ ephemeral: true });
     const button = interaction;
     refreshFiles();
-    const logChannel = utils.findLogChannel(button);
+    const logChannel = utils.findLogChannel(button.guild);
     logChannel?.send(`${button.user} clicked button!`);
     const member = button.guild.members.cache.get(button.user.id);
     let roleList = "";
@@ -302,6 +314,13 @@ client.on(Discord.Events.AutoModerationActionExecution, (execution) => {
         xp_levels.removeXP(execution, execution.user, xpRemoval, guildPrefix);
         execution.user.send(`Wir bitten um einen freundlichen und respektvollen Umgang auf unserem Server. Schimpfwörter und Spam sind hier nicht erlaubt, daher wurden dir ${Math.abs(xpRemoval)} XP abgezogen.`);
     }
+});
+
+//Check, ob Events von Trainer:innen bearbeitet wurden
+client.on(Discord.Events.GuildScheduledEventUpdate, async (oldGuildScheduledEvent, newGuildScheduledEvent) => {
+    if(newGuildScheduledEvent.creator !== client.user) return;
+    if(newGuildScheduledEvent.status !== Discord.GuildScheduledEventStatus.Scheduled) return;
+    await driveAutoEvents.manualEventUpdate(oldGuildScheduledEvent, newGuildScheduledEvent);
 });
 
 //Voice Channel Detection
@@ -420,7 +439,7 @@ client.on(Discord.Events.MessageCreate, async (msg) => {
     } catch (error) {
         console.error(error);
         msg.reply("There was an error trying to execute the command!");
-        const logChannel = utils.findLogChannel(msg);
+        const logChannel = utils.findLogChannel(msg.guild);
         logChannel?.send(`Error trying to execute command ${command.data.name} in channel ${msg.channel}. ${msg.guild.members.cache.get(config.author)}\nError: ${error}`);
     }
 });

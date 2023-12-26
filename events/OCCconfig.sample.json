@@ -1,0 +1,13 @@
+{
+    "sheetsSpreadsheetId": "ID of the Google Sheets Spreadsheet for automatic Event creation",
+    "alwaysCheckGuilds": [
+        "Ids of the guilds that will always be checked for deleted events"
+    ],
+    "OCCs": {
+        "The name of the Coding Club as configured in the Sheets file": {
+            "guildId": "The ID of the guild of the voice channel",
+            "channelId": "The ID of the voice channel",
+            "imagefileName": "File name of the thumbnail image"
+        }
+    }
+}

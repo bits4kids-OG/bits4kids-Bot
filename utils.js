@@ -38,8 +38,8 @@ exports.checkArrayEmpty = function(array) {
     }
 };
   
-exports.findLogChannel = function(msg) {
-    let logChannel = findLogChannel(msg.guild);
+exports.findLogChannel = function(guild) {
+    let logChannel = findLogChannel(guild);
     return logChannel;
 };
 
