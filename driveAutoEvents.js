@@ -347,12 +347,12 @@ async function getSpreadsheetInfo() {
                     thumbnailURL: data[i][column_thumbnailOverwrite],
                     id: data[i][column_id],
 
-                    name_A1: getA1Notation(i+1, column_name),
-                    scheduledStartTimestamp_A1: getA1Notation(i+1, column_WRITEscheduledStartTimestamp),
-                    scheduledEndTimestamp_A1: getA1Notation(i+1, column_WRITEscheduledEndTimestamp),
-                    description_A1: getA1Notation(i+1, column_description),
-                    club_A1: getA1Notation(i+1, column_club),
-                    id_A1: getA1Notation(i+1, column_id)
+                    name_A1: getA1Notation(i, column_name),
+                    scheduledStartTimestamp_A1: getA1Notation(i, column_WRITEscheduledStartTimestamp),
+                    scheduledEndTimestamp_A1: getA1Notation(i, column_WRITEscheduledEndTimestamp),
+                    description_A1: getA1Notation(i, column_description),
+                    club_A1: getA1Notation(i, column_club),
+                    id_A1: getA1Notation(i, column_id)
                 });
             }
         } else {

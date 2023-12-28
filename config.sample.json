@@ -10,7 +10,7 @@
       "blacklisted user IDs"
     ],
     "author": "User ID of the bot's author",
-    "invite": "Invite link for the bot; Use this permission bitfield: 268954737",
+    "invite": "Invite link for the bot; Use this permission bitfield: 18700556561521",
     "OpenWeatherMapAPI": "Your OpenWeatherMapAPI key",
     "xpChannel": "Name of the XP channel (string)",
     "welcomeChannel": "Channel ID of the welcome channel",
