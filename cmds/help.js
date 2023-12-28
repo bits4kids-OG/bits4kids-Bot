@@ -34,11 +34,12 @@ module.exports = {
                     { name: `${guildPrefix}showbeginners`, value: "Zeigt die gespeicherten Beginner auf diesem Server an. Die Aktualisierung der Datenbank erfolgt erst beim Beitritt des jewiligen Users zu einem Coding Club. Als Output wird eine Excel-Datei erzeugt. Benötigt die Berechtigung \"Manage Roles\".", inline: true },
                     { name: `${guildPrefix}pending`, value: "Zeigt an, welche Benutzer zwar auf dem Server sind, aber noch nicht die Regeln akzeptiert haben. Benötigt die Berechtigung \"Manage Server\".", inline: true },
 
-                    { name: "\u200b", value: "\u200b" },
+                    //{ name: "\u200b", value: "\u200b" },
                     { name: "Interaktion mit Teilnehmer:innen", value: "\u200b" },
                     { name: `${guildPrefix}gamejam`, value: `Schaltet die GameJam Kategorie auf dem bits4kids-Server für alle sichtbar/unsichtbar.\nBenutzung: ${guildPrefix}gamejam start oder ${guildPrefix}gamejam stop oder ${guildPrefix}gamejam status.\nBenötigt die Berechtigung "Manage Roles".`, inline: true },
                     { name: `${guildPrefix}umfrage`, value: "Fügt der vorherigen Nachricht Emojis als Umfrage hinzu. Benötigt die Berechtigung \"Manage Roles\".", inline: true },
                     { name: `${guildPrefix}copyrole`, value: `Kopiert die angegebene Rolle mit den entsprechenden Berechtigungen. Benötigt die Berechtigung "Manage Roles". Korrekte Benutzung: ${guildPrefix}copyrole <Name oder ID der Rolle> <Name der duplizierten Rolle> or ${guildPrefix}copyrole <Name oder ID der Rolle>`, inline: true },
+                    { name: `${guildPrefix}updateevents`, value: "Aktualisiert das Event Management System mit der Google Sheets Datei. Benötigt die Berechtigung \"Manage Server\".", inline: true },
 
                     //{ name: "\u200b", value: "\u200b" },
                     { name: "Wartung des Bots", value: "\u200b" },

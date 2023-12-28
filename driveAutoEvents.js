@@ -5,6 +5,7 @@ const AllOCCconfig = require("./events/OCCconfig.json");
 const OCCconfig = AllOCCconfig["OCCs"];
 
 const path = require("path");
+const fs = require("fs");
 
 const {google} = require("googleapis");
 
@@ -123,7 +124,9 @@ exports.createEvents = async function(client) {
                             if(event.thumbnailURL) {
                                 img = event.thumbnailURL;
                             } else {
-                                img = path.join("./events", eventConfig.imagefileName);
+                                let imgPath = path.join("./events", eventConfig.imagefileName);
+                                if((imgPath !== "events") && (fs.existsSync(imgPath))) img = imgPath;
+                                
                             }
                             try {
                                 await existingEvent.edit({
@@ -156,7 +159,8 @@ exports.createEvents = async function(client) {
                     if(event.thumbnailURL) {
                         img = event.thumbnailURL;
                     } else {
-                        img = path.join("./events", eventConfig.imagefileName);
+                        let imgPath = path.join("./events", eventConfig.imagefileName);
+                        if((imgPath !== "events") && (fs.existsSync(imgPath))) img = imgPath;
                     }
                     const event_manager = new Discord.GuildScheduledEventManager(eventGuild);
                     const new_event = await event_manager.create({
@@ -254,9 +258,12 @@ exports.manualEventUpdate = async function(oldEvent, newEvent) {
                 }
                 if(!club) break;
                 if(!event.thumbnailURL) {
+                    let img = "";
+                    let imgPath = path.join("./events", OCCconfig[club].imagefileName);
+                    if((imgPath !== "events") && (fs.existsSync(imgPath))) img = imgPath;
                     try {
                         await newEvent.edit({
-                            image: path.join("./events", OCCconfig[club].imagefileName)
+                            image: img
                         });
                         logChannel?.send(`Successfully edited the event thumbnail of event *${newEvent.name}*.`);
                     } catch (error) {
