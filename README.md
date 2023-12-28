@@ -26,6 +26,7 @@ The bits4kids-Discord bot helps *Coding Trainers* manage *Online Coding Clubs* o
 - Auto-Role-Assignment based on invites
 - XP and level system
 - VoiceLog system: Attendance tracking
+- Automatic Discord event management system using Google Sheets API
 - Offer a simplified experience for Discord beginners
 - Various fun commands
 
@@ -45,4 +46,8 @@ The bits4kids-Discord bot helps *Coding Trainers* manage *Online Coding Clubs* o
     - The badge name and level hurdle for each badge can be chosen freely
     - There is no limitations in the amount of badges
     - The badges do not have to be in any specific order
+1. Copy `OCCconfig.sample.json` to `OCCconfig.json`
+1. Configure all options in `OCCconfig.json` as preferred
+    - The spreadsheet ID can be obtained using the Google Drive URL of the Google Sheets file
+1. Register a Google service account using the [Google Cloud](https://cloud.google.com/) Console, then create a private key and save it as `credentials.json` in the project folder
 1. Run the bot using `node index.js`
