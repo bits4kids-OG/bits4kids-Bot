@@ -95,7 +95,7 @@ client.on(Discord.Events.ClientReady, () => {
     });
 
     const job = cron.CronJob.from({
-        cronTime: "00 00 03,11,20 * * *",
+        cronTime: "00 00 03,15,20 * * *",
         onTick: async function() {
             await driveAutoEvents.createEvents(client);
         },
