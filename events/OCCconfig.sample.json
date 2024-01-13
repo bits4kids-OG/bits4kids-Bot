@@ -6,7 +6,7 @@
     "OCCs": {
         "The name of the Coding Club as configured in the Sheets file": {
             "guildId": "The ID of the guild of the voice channel",
-            "channelId": "The ID of the voice channel",
+            "channelName": "The name of the voice channel",
             "imagefileName": "File name of the thumbnail image"
         }
     }

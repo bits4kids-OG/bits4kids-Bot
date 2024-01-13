@@ -59,9 +59,17 @@ exports.createEvents = async function(client) {
             }
             let eventGuild = client.guilds.cache.get(eventConfig.guildId);
             if(!eventGuild) eventGuild = await client.guilds.fetch(eventConfig.guildId).catch(console.error);
-            let eventChannel = eventGuild.channels.cache.get(eventConfig.channelId);
-            if(!eventChannel) eventChannel = await eventGuild.channels.fetch(eventConfig.channelId).catch(console.error);
-            event.channelId = eventConfig.channelId;
+            let eventChannel = eventGuild.channels.cache.find(channel => channel.name === eventConfig.channelName && !channel.parent.name.includes("Kanal-Friedhof"));
+            if(!eventChannel) {
+                await eventGuild.channels.fetch()
+                    .then(channels => eventChannel = channels.find(channel => channel.name === eventConfig.channelName && !channel.parent.name.includes("Kanal-Friedhof")))
+                    .catch(console.error);
+                if(!eventChannel) {
+                    console.log(`Skipping ${event.name}: no channel found.`);
+                    break;
+                }
+            }
+            event.channelId = eventChannel.id;
 
             let alreadyCreated = false;
 
@@ -213,7 +221,7 @@ exports.createEvents = async function(client) {
     }
 };
 
-exports.manualEventUpdate = async function(oldEvent, newEvent) {
+exports.manualEventUpdate = async function(oldEvent, newEvent, client) {
     const logChannel = utils.findLogChannel(newEvent.guild);
     let needUpdate = [];
     const checkForArguments = ["name", "description", "scheduledStartTimestamp", "channelId"];
@@ -234,9 +242,24 @@ exports.manualEventUpdate = async function(oldEvent, newEvent) {
     } else {
         const eventData = await getSpreadsheetInfo();
         const event = eventData.find(e => e.id === newEvent.id);
-        if(!event) return;
-        event.channelId = OCCconfig[event.club].channelId;
+        if(!event) return;        
+
+        const eventConfig = OCCconfig[event.club];
+        if(!eventConfig) {
+            console.log(`Skipping ${event.name}: no channel assigned.`);
+            return;
+        }
+        let eventGuild = client.guilds.cache.get(eventConfig.guildId);
+        if(!eventGuild) eventGuild = await client.guilds.fetch(eventConfig.guildId).catch(console.error);
+        let eventChannel = eventGuild.channels.cache.find(channel => channel.name === eventConfig.channelName && !channel.parent.name.includes("Kanal-Friedhof"));
+        if(!eventChannel) {
+            await eventGuild.channels.fetch()
+                .then(channels => eventChannel = channels.find(channel => channel.name === eventConfig.channelName && !channel.parent.name.includes("Kanal-Friedhof")))
+                .catch(console.error);
+        }
+        event.channelId = eventChannel.id;
         if(!event.channelId) return;
+
         logChannel?.send(`Event *${newEvent.name}* was manually edited.\nUpdating Sheets file for:\n${needUpdate.join("\n")}`);
 
 
@@ -252,7 +275,7 @@ exports.manualEventUpdate = async function(oldEvent, newEvent) {
             if(needUpdate[updates] === "channelId") {
                 let club;
                 for(const key in OCCconfig) {
-                    if(OCCconfig[key].channelId === newEvent.channelId) {
+                    if(OCCconfig[key].channelName === newEvent.channel.name) {
                         club = key;
                     }
                 }

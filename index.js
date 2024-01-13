@@ -320,7 +320,7 @@ client.on(Discord.Events.AutoModerationActionExecution, (execution) => {
 client.on(Discord.Events.GuildScheduledEventUpdate, async (oldGuildScheduledEvent, newGuildScheduledEvent) => {
     if(newGuildScheduledEvent.creator !== client.user) return;
     if(newGuildScheduledEvent.status !== Discord.GuildScheduledEventStatus.Scheduled) return;
-    await driveAutoEvents.manualEventUpdate(oldGuildScheduledEvent, newGuildScheduledEvent);
+    await driveAutoEvents.manualEventUpdate(oldGuildScheduledEvent, newGuildScheduledEvent, client);
 });
 
 //Voice Channel Detection
