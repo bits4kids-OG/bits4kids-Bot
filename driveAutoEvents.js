@@ -242,7 +242,7 @@ exports.manualEventUpdate = async function(oldEvent, newEvent, client) {
     } else {
         const eventData = await getSpreadsheetInfo();
         const event = eventData.find(e => e.id === newEvent.id);
-        if(!event) return;        
+        if(!event) return;
 
         const eventConfig = OCCconfig[event.club];
         if(!eventConfig) {
@@ -362,10 +362,10 @@ async function getSpreadsheetInfo() {
         if ((column_name != -1) && (column_scheduledStartTimestamp != -1) && (column_scheduledEndTimestamp != -1) && (column_description != -1) && (column_thumbnailOverwrite != -1) && (column_club != -1) && (column_id != -1)) {
             for(let i=1; i<numRows; i++) {
                 result.push({
-                    name: data[i][column_name],
+                    name: data[i][column_name]?.trim(),
                     scheduledStartTimestamp: Date.parse(data[i][column_scheduledStartTimestamp]),
                     scheduledEndTimestamp: Date.parse(data[i][column_scheduledEndTimestamp]),
-                    description: data[i][column_description],
+                    description: data[i][column_description]?.trim(),
                     club: data[i][column_club],
                     thumbnailURL: data[i][column_thumbnailOverwrite],
                     id: data[i][column_id],
