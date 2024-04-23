@@ -4,7 +4,16 @@ const Discord = require("discord.js");
 const config = require("../config.json");
 const utils = require("../utils.js");
 
-const fs = require("fs");
+const Database = require("better-sqlite3");
+const db = new Database("./b4kBot.db", {fileMustExist: true});
+
+const writeXPtimeout = db.prepare(`--sql
+    INSERT INTO xpLevels (userId, guildId, timeout)
+        VALUES (?, ?, ?)
+        ON CONFLICT(userId, guildId)
+        DO UPDATE SET
+            timeout = excluded.timeout;
+`);
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -39,8 +48,7 @@ module.exports = {
                 return;
             }
 
-            const XP = utils.getXP(msg, user);
-            const userXP = XP[msg.guild.id][user.id];
+            const userXP = utils.getXP(msg, user);
 
             const minute = 1000 * 60;
             const hour = minute * 60;
@@ -51,9 +59,7 @@ module.exports = {
 
             userXP.timeout = timeout;
         
-            fs.writeFileSync("./xp.json", JSON.stringify(XP, null, 2), err => {
-                if(err) console.log(err);
-            });
+            writeXPtimeout.run(user.id, msg.guild.id, userXP.timeout);
 
             const timeoutDate = new Date(userXP.timeout);
             msg.reply(`${user} hat ein Timeout von ${number} Tagen erhalten!\nIm Timeout bis: ${timeoutDate.toLocaleString("en-GB")}`);

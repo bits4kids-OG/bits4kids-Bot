@@ -5,7 +5,17 @@ const xp_levels = require("../xp-and-levels.js");
 const config = require("../config.json");
 const utils = require("../utils.js");
 
-const fs = require("fs");
+const Database = require("better-sqlite3");
+const db = new Database("./b4kBot.db", {fileMustExist: true});
+
+const writeLevel = db.prepare(`--sql
+    INSERT INTO xpLevels (userId, guildId, level, last_message)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(userId, guildId)
+        DO UPDATE SET
+            level = excluded.level,
+            last_message = excluded.last_message;
+`);
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -36,20 +46,15 @@ module.exports = {
                 return;
             }
 
-            const XP = utils.getXP(msg, user);
-            const userXP = XP[msg.guild.id][user.id];
+            const userXP = utils.getXP(msg, user);
 
             userXP.level++;
             userXP.last_message = Date.now();
         
-            fs.writeFileSync("./xp.json", JSON.stringify(XP, null, 2), err => {
-                if(err) console.log(err);
-            });
+            writeLevel.run(user.id, msg.guild.id, userXP.level, userXP.last_message);
 
-            xp_levels.levelUp(msg, user, guildPrefix);
+            xp_levels.levelUp(msg, user, guildPrefix, userXP);
             msg.reply(`${user} wurde auf das nächste Level ${userXP.level} gesetzt!`);
-
         }
-    
     },
 };

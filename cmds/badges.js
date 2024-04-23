@@ -54,7 +54,6 @@ module.exports = {
 
                     msg.reply({
                         content: `Dein zuletzt erhaltenes Badge: **${earnedBadges_last.name}**`,
-                        //embeds: [badgeEarned],
                         files: [file]
                     });
                 });
@@ -70,7 +69,7 @@ module.exports = {
                 nextBadge = badgeLevelconfig[earnedBadges.length];
             }
         
-            const userXP = utils.getXP(msg, user)[msg.guild.id][user.id];
+            const userXP = utils.getXP(msg, user);
             
             let progressBar;
             if(isNaN(nextBadge.level)) {

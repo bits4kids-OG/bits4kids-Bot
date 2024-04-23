@@ -1,6 +1,10 @@
 const Discord = require("discord.js");
 const fs = require("fs");
 
+const Database = require("better-sqlite3");
+const db = new Database("./b4kBot.db", {fileMustExist: true});
+
+
 exports.findGoodChannel = function(guild) {
     return guild.channels.cache
         .filter((channel) => {
@@ -138,28 +142,26 @@ exports.findXpChannel = function(msg, name) {
     return channel;
 };
 
+const stmt = db.prepare(`--sql
+    SELECT
+        level,
+        xp,
+        last_message,
+        timeout
+    FROM xpLevels
+    WHERE userId = ? AND guildId = ?;
+`);
+
 exports.getXP = function(msg, user) {
-    let XP = {};
-    if(fs.existsSync("./xp.json")) {
-        XP = JSON.parse(fs.readFileSync("./xp.json", "utf8"));
+    const row = stmt.get(user.id, msg.guild.id);
+    console.log(row);
+    for(const key in row) {
+        if(Object.prototype.hasOwnProperty.call(row, key)) {
+            row[key] ??= 0;
+        }
     }
-  
-    if(msg.guild.id in XP === false) {
-        XP[msg.guild.id] = {};
-    }
-    const guildXP = XP[msg.guild.id];
-    if(user.id in guildXP === false) {
-        guildXP[user.id] = {
-            xp: 0,
-            level: 0,
-            last_message: 0,
-            timeout: 0
-        };
-        fs.writeFileSync("./xp.json", JSON.stringify(XP, null, 2), err => {
-            if(err) console.log(err);
-        });
-    }
-    return XP;
+    console.log(row);
+    return(row);
 };
 
 exports.addBeginners = function(msg, user) {

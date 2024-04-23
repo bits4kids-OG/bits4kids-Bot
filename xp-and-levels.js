@@ -2,17 +2,27 @@ const Discord = require("discord.js");
 const utils = require("./utils.js");
 const config = require("./config.json");
 
-const badgeLevelconfig = require("./badgeLevelconfig.json")["badges"];
+const Database = require("better-sqlite3");
+const db = new Database("./b4kBot.db", {fileMustExist: true});
 
-const fs = require("fs");
+const badgeLevelconfig = require("./badgeLevelconfig.json")["badges"];
 
 const path = require("path");
 
 //Vergabe von XP-Punkten
 
+const insertXP = db.prepare(`--sql
+INSERT INTO xpLevels (userId, guildId, level, xp, last_message)
+    VALUES (?, ?, ?, ?, ?)
+    ON CONFLICT(userId, guildId)
+    DO UPDATE SET
+        level = excluded.level,
+        xp = excluded.xp,
+        last_message = excluded.last_message;
+`);
+
 exports.addXP = function(msg, user, number, guildPrefix) {
-    const XP = utils.getXP(msg, user);
-    const userXP = XP[msg.guild.id][user.id];
+    const userXP = utils.getXP(msg, user);
 
     userXP.xp += number;
     userXP.last_message = Date.now();
@@ -24,19 +34,13 @@ exports.addXP = function(msg, user, number, guildPrefix) {
         userXP.level ++;
         userXP.xp = userXP.xp - xpToNextLevel;
         xpToNextLevel = LvlAlg(userXP.level);
-        fs.writeFileSync("./xp.json", JSON.stringify(XP, null, 2), err => {
-            if(err) console.log(err);
-        });
-        nextLevel(msg, user, guildPrefix);
+        nextLevel(msg, user, guildPrefix, userXP);
     }
-    fs.writeFileSync("./xp.json", JSON.stringify(XP, null, 2), err => {
-        if(err) console.log(err);
-    });
+    insertXP.run(user.id, msg.guild.id, userXP.level, userXP.xp, userXP.last_message);
 };
 
 exports.removeXP = function(msg, user, number, guildPrefix) {
-    const XP = utils.getXP(msg, user);
-    const userXP = XP[msg.guild.id][user.id];
+    const userXP = utils.getXP(msg, user);
 
     userXP.xp += number;
     userXP.last_message = Date.now();
@@ -55,16 +59,15 @@ exports.removeXP = function(msg, user, number, guildPrefix) {
             userXP.xp = 0;
         }
     }
-    fs.writeFileSync("./xp.json", JSON.stringify(XP, null, 2), err => {
-        if(err) console.log(err);
-    });
-    if(levelDowngrade === true) nextLevel(msg, user, guildPrefix);
+    insertXP.run(user.id, msg.guild.id, userXP.level, userXP.xp, userXP.last_message);
+
+    if(levelDowngrade === true) nextLevel(msg, user, guildPrefix, userXP);
 };
 
 //Abfrage nach XP durch den Benutzer
 
 exports.xpInfoScreen = function(msg, user) {
-    const userXP = utils.getXP(msg, user)[msg.guild.id][user.id];
+    const userXP = utils.getXP(msg, user);
 
     const xpToNextLevel = LvlAlg(userXP.level);
 
@@ -96,12 +99,12 @@ exports.xpInfoScreen = function(msg, user) {
 
 //Gratulation bei Level-Up
 
-exports.levelUp = function(msg, user, guildPrefix) {
-    nextLevel(msg, user, guildPrefix);
+exports.levelUp = function(msg, user, guildPrefix, optUserXP) {
+    nextLevel(msg, user, guildPrefix, optUserXP);
 };
 
-function nextLevel(msg, user, guildPrefix) {
-    const userXP = utils.getXP(msg, user)[msg.guild.id][user.id];
+function nextLevel(msg, user, guildPrefix, optUserXP) {
+    const userXP = optUserXP ?? utils.getXP(msg, user);
 
     const xpToNextLevel = LvlAlg(userXP.level);
 
@@ -176,7 +179,7 @@ function LvlAlg(lvl) {
 //Abfrage
 
 exports.earnedBadges = function(msg, user) {
-    const userXP = utils.getXP(msg, user)[msg.guild.id][user.id];
+    const userXP = utils.getXP(msg, user);
 
     let earnedBadges = [];
 

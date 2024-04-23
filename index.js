@@ -5,6 +5,33 @@ myIntents.add(Discord.GatewayIntentBits.MessageContent, Discord.GatewayIntentBit
 
 const client = new Discord.Client({ intents: myIntents });
 
+const Database = require("better-sqlite3");
+const db = new Database("./b4kBot.db");
+
+db.exec(`--sql
+    CREATE TABLE IF NOT EXISTS xpLevels (
+        userId TEXT NOT NULL,
+        guildId TEXT NOT NULL,
+        level INTEGER,
+        xp INTEGER,
+        last_message INTEGER,
+        timeout INTEGER,
+        acceptLB INTEGER DEFAULT 0,
+        PRIMARY KEY(userId, guildId)
+    );
+`);
+db.exec(`--sql
+    CREATE TABLE IF NOT EXISTS userData (
+        userId TEXT NOT NULL PRIMARY KEY,
+        displayName TEXT,
+        birthday INTEGER
+    );
+`);
+
+const leaderboard = require("./leaderboard.js");
+leaderboard.createMonthlyCopy();
+
+
 const config = require("./config.json");
 const { version } = require("./package.json");
 const fs = require("fs");
@@ -102,6 +129,13 @@ client.on(Discord.Events.ClientReady, () => {
         timeZone: "Europe/Vienna"
     });
     job.start();
+    // db.backup(`backup-${Date.now()}.db`)
+    //     .then(() => {
+    //         console.log("backup complete!");
+    //     })
+    //     .catch((err) => {
+    //         console.log("backup failed:", err);
+    //     });
 });
 
 //automatisches Refreshen der Invites, bei Hinzufügen/Entfernen
@@ -258,8 +292,21 @@ client.on(Discord.Events.InteractionCreate, async interaction => {
     if (!interaction.isButton()) return;
     await interaction.deferReply({ ephemeral: true });
     const button = interaction;
-    refreshFiles();
     const logChannel = utils.findLogChannel(button.guild);
+
+    if(button.customId === "optinLB") {
+        leaderboard.changeAcceptLB(button, 1);
+        logChannel?.send(`${button.user} opted in the leaderboard!`);
+        await button.editReply("Du nimmst nun teil am Leaderboard!");
+        return;
+    } else if(button.customId === "optoutLB") {
+        leaderboard.changeAcceptLB(button, 0);
+        logChannel?.send(`${button.user} opted out the leaderboard!`);
+        await button.editReply("Du nimmst nun nicht mehr teil am Leaderboard!");
+        return;
+    }
+
+    refreshFiles();
     logChannel?.send(`${button.user} clicked button!`);
     const member = button.guild.members.cache.get(button.user.id);
     let roleList = "";
@@ -411,7 +458,7 @@ client.on(Discord.Events.MessageCreate, async (msg) => {
 
         //Vergabe von XP-Punkten
 
-        const userXP = utils.getXP(msg, msg.author)[msg.guild.id][msg.author.id];
+        const userXP = utils.getXP(msg, msg.author);
 
         //Checken, wann die letzte Nachricht war, dann Vergabe per Zufall
 
@@ -459,7 +506,7 @@ client.on(Discord.Events.GuildCreate, async (guild) => {
     });
 });
 
-client.login(config.token);
+client.login(config.tokenTest);
 
 
 function voicelogLeftChannel(member, newState, oldState, VoiceLogChannel) {
@@ -493,11 +540,11 @@ function refreshInvites(msg) {
     });
 }
 
-function getPrefix(guildID) {
-    if(guildID in prefixes === false) {
+function getPrefix(guildId) {
+    if(guildId in prefixes === false) {
         return null;
     } else {
-        return prefixes[guildID];
+        return prefixes[guildId];
     }
 }
 

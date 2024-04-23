@@ -19,7 +19,7 @@ module.exports = {
 
         let farben = ["Primary", "Secondary", "Success", "Danger", "Link"];
     
-        if (!args[0] || !args[1] || !args[2] || !args[3] || (args[0] != "Link" && !args[4])) {
+        if (!args[0] || !args[1] || !args[2] || !args[3] || (((args[0] != "Link") && (args[0] != "leaderboard")) && !args[4])) {
     
             if (args[0] === "list") {
                 msg.reply("Sent you a DM!");
@@ -56,6 +56,10 @@ module.exports = {
     
             if ((args[1]) && (args[1] === "unset")) {
                 let buttonsID = args[0];
+                if((buttonsID === "optinLB") || (buttonsID === "optoutLB")) {
+                    msg.reply("This ID is reserved for the leaderboard optin/optout system!");
+                    return;
+                }
                 if (buttonsID == null || !buttons[msg.guild.id][buttonsID]) {
                     msg.reply("Warning! No ID found.");
                     return;
@@ -78,6 +82,10 @@ module.exports = {
               
             if ((args[2]) && (args[2] === "unset")) {
                 let buttonsID = args[0];
+                if((buttonsID === "optinLB") || (buttonsID === "optoutLB")) {
+                    msg.reply("This ID is reserved for the leaderboard optin/optout system!");
+                    return;
+                }
                 if (buttonsID == null || !buttons[msg.guild.id][buttonsID]) {
                     msg.reply("Warning! No ID found.");
                     return;
@@ -106,6 +114,10 @@ module.exports = {
     
             if ((args[2]) && (args[2] === "connect")) {
                 let buttonsID = args[0];
+                if((buttonsID === "optinLB") || (buttonsID === "optoutLB")) {
+                    msg.reply("This ID is reserved for the leaderboard optin/optout system!");
+                    return;
+                }
                 if (buttonsID == null || !buttons[msg.guild.id][buttonsID]) {
                     msg.reply("Warning! No ID found.");
                     return;
@@ -142,17 +154,45 @@ module.exports = {
                 return;
             }
     
-            msg.reply(`Correct usage: ${guildPrefix}button create <id> <color> <text_on_button> <text in message> or ${guildPrefix}button <id> <desired role to connect> <color> <text_on_button> <text in message> or ${guildPrefix}button <id> <desired role to connect> connect or ${guildPrefix}button <id> unset or ${guildPrefix}button <id> <role> unset or ${guildPrefix}button url <desired link> <text_on_button> <text in message>`);
+            msg.reply(`Correct usage: ${guildPrefix}button create <id> <color> <text_on_button> <text in message> or ${guildPrefix}button <id> <desired role to connect> <color> <text_on_button> <text in message> or ${guildPrefix}button <id> <desired role to connect> connect or ${guildPrefix}button <id> unset or ${guildPrefix}button <id> <role> unset or ${guildPrefix}button url <desired link> <text_on_button> <text in message> or ${guildPrefix}button leaderboard <text_on_button1> <text_on_button2> <text in message>`);
             return;
         }
     
-    
-        if (args[0] === "create") {
+        if(args[0] === "leaderboard") {
+            let buttonTextYes = args[1]
+                .split("_").join(" ");
+            let buttonTextNo = args[2]
+                .split("_").join(" ");
+            let msgText = args
+                .slice(3)
+                .join(" ");
+  
+            const row = new Discord.ActionRowBuilder()
+                .addComponents(
+                    new Discord.ButtonBuilder()
+                        .setStyle(Discord.ButtonStyle.Success)
+                        .setCustomId("optinLB")
+                        .setLabel(buttonTextYes)
+                )
+                .addComponents(
+                    new Discord.ButtonBuilder()
+                        .setStyle(Discord.ButtonStyle.Danger)
+                        .setCustomId("optoutLB")
+                        .setLabel(buttonTextNo)
+                );
+            msg.channel.send({ content: msgText, components: [row] });
+            msg.delete();
+            return;
+        } else if (args[0] === "create") {
             if (!farben.includes(args[2])) {
                 msg.reply("This style is not supported! Correct Styles: Primary, Secondary, Success, Danger, Link");
                 return;
             } else {
                 let buttonsID = args[1];
+                if((buttonsID === "optinLB") || (buttonsID === "optoutLB")) {
+                    msg.reply("This ID is reserved for the leaderboard optin/optout system!");
+                    return;
+                }
                 let buttonsColor = args[2];
                 let buttonText = args[3]
                     .split("_").join(" ");
@@ -200,6 +240,10 @@ module.exports = {
     
         let buttonsColor = args[0];
         let buttonsID = args[1];
+        if((buttonsID === "optinLB") || (buttonsID === "optoutLB")) {
+            msg.reply("This ID is reserved for the leaderboard optin/optout system!");
+            return;
+        }
         let buttonText = args[2]
             .split("_").join(" ");
         let msgText = args
@@ -208,7 +252,7 @@ module.exports = {
     
         if (args[0] === "url") {
             if (!buttonsID.includes("https") && !buttonsID.includes("http") && !buttonsID.includes("discord")) {
-                msg.reply(`Correct usage: ${guildPrefix}button create <id> <color> <text_on_button> <text in message> or ${guildPrefix}button <id> <desired role to connect> <color> <text_on_button> <text in message> or ${guildPrefix}button <id> <desired role to connect> connect or ${guildPrefix}button <id> unset or ${guildPrefix}button <id> <role> unset or ${guildPrefix}button url <desired link> <text_on_button> <text in message>`);
+                msg.reply(`Correct usage: ${guildPrefix}button create <id> <color> <text_on_button> <text in message> or ${guildPrefix}button <id> <desired role to connect> <color> <text_on_button> <text in message> or ${guildPrefix}button <id> <desired role to connect> connect or ${guildPrefix}button <id> unset or ${guildPrefix}button <id> <role> unset or ${guildPrefix}button url <desired link> <text_on_button> <text in message> or ${guildPrefix}button leaderboard <text_on_button1> <text_on_button2> <text in message>`);
                 return;
             }
             const row = new Discord.ActionRowBuilder()
@@ -225,6 +269,10 @@ module.exports = {
             return;
         } else {
             let buttonsID = args[0];
+            if((buttonsID === "optinLB") || (buttonsID === "optoutLB")) {
+                msg.reply("This ID is reserved for the leaderboard optin/optout system!");
+                return;
+            }
             let buttonsRole = utils.getRole(msg.member, args[1]);
             if (buttonsRole == null) {
                 msg.reply("Warning! No role found.");
