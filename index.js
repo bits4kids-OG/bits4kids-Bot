@@ -29,7 +29,7 @@ db.exec(`--sql
 `);
 
 const leaderboard = require("./leaderboard.js");
-leaderboard.createMonthlyCopy();
+leaderboard.createLeaderboard();
 
 
 const config = require("./config.json");
