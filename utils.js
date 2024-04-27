@@ -153,14 +153,20 @@ const stmt = db.prepare(`--sql
 `);
 
 exports.getXP = function(msg, user) {
-    const row = stmt.get(user.id, msg.guild.id);
-    console.log(row);
+    let row = stmt.get(user.id, msg.guild.id);
+    if(!row) {
+        row = {
+            level: null,
+            xp: null,
+            last_message: null,
+            timeout: null,
+        };
+    }
     for(const key in row) {
         if(Object.prototype.hasOwnProperty.call(row, key)) {
             row[key] ??= 0;
         }
     }
-    console.log(row);
     return(row);
 };
 

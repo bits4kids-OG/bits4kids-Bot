@@ -16,13 +16,18 @@ exports.createLeaderboard = function() {
         SELECT
             c.userId,
             c.guildId,
-            (c.level - COALESCE(l.level, 0)) AS levelDifference
+            (c.level - COALESCE(l.level, 0)) AS levelDifference,
+            (c.xp - COALESCE(l.xp, 0)) AS xpDifference
         FROM ${currMonthTable} c
         LEFT JOIN ${lastMonthTable} l ON
             c.userId = l.userId AND
             c.guildId = l.guildId
-        WHERE c.level IS NOT NULL
-        ORDER BY levelDifference DESC
+        WHERE
+            c.level IS NOT NULL
+            AND c.xp IS NOT NULL
+        ORDER BY
+            levelDifference DESC,
+            xpDifference DESC
         LIMIT 10;
     `).all();
     console.log(leaderBoardTop10);
