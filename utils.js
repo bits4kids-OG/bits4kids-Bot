@@ -156,11 +156,12 @@ exports.getXP = function(msg, user) {
     let row = stmt.get(user.id, msg.guild.id);
     if(!row) {
         row = {
-            level: null,
-            xp: null,
-            last_message: null,
-            timeout: null,
+            level: 0,
+            xp: 0,
+            last_message: 0,
+            timeout: 0,
         };
+        return(row);
     }
     for(const key in row) {
         if(Object.prototype.hasOwnProperty.call(row, key)) {
