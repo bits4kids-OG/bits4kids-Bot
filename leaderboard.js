@@ -13,21 +13,30 @@ exports.createLeaderboard = function() {
     const lastMonthTable = `xpLevelsMonthly_${date.addMonths(-1).toLocaleDateString("de-AT", { month: "long" })}_${date.getFullYear()}`;
     console.log(lastMonthTable);
     const leaderBoardTop10 = db.prepare(`--sql
+        WITH baseXpLevelData
+        AS (
+            SELECT
+                c.userId,
+                c.guildId,
+                (c.level - COALESCE(l.level, 0)) AS levelDifference,
+                (c.xp - COALESCE(l.xp, 0)) AS xpDifference
+            FROM ${currMonthTable} c
+            LEFT JOIN ${lastMonthTable} l ON
+                c.userId = l.userId AND
+                c.guildId = l.guildId
+            WHERE
+                c.level IS NOT NULL
+                AND c.xp IS NOT NULL
+            ORDER BY
+                levelDifference DESC,
+                xpDifference DESC
+        )
         SELECT
-            c.userId,
-            c.guildId,
-            (c.level - COALESCE(l.level, 0)) AS levelDifference,
-            (c.xp - COALESCE(l.xp, 0)) AS xpDifference
-        FROM ${currMonthTable} c
-        LEFT JOIN ${lastMonthTable} l ON
-            c.userId = l.userId AND
-            c.guildId = l.guildId
-        WHERE
-            c.level IS NOT NULL
-            AND c.xp IS NOT NULL
-        ORDER BY
-            levelDifference DESC,
-            xpDifference DESC
+            userId,
+            guildId,
+            (1/6)*POWER(levelDifference,3) + 5*POWER(levelDifference,2) + 100*levelDifference + xpDifference AS totalXpDifference
+        FROM baseXpLevelData
+        ORDER BY totalXpDifference
         LIMIT 10;
     `).all();
     console.log(leaderBoardTop10);
