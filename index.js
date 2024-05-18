@@ -52,6 +52,11 @@ const utils = require("./utils.js");
 const xp_levels = require("./xp-and-levels.js");
 const driveAutoEvents = require("./driveAutoEvents.js");
 
+
+if (!fs.existsSync("./backups")) {
+    fs.mkdirSync("./backups");
+}
+
 let prefixes = {};
 if(fs.existsSync("./prefixes.json")) {
     prefixes = JSON.parse(fs.readFileSync("./prefixes.json", "utf8"));
@@ -131,21 +136,29 @@ client.on(Discord.Events.ClientReady, () => {
         });
     });
 
-    const job = cron.CronJob.from({
+    const checkEventJob = cron.CronJob.from({
         cronTime: "00 00 03,15,20 * * *",
         onTick: async function() {
             await driveAutoEvents.createEvents(client);
         },
         timeZone: "Europe/Vienna"
     });
-    job.start();
-    // db.backup(`backup-${Date.now()}.db`)
-    //     .then(() => {
-    //         console.log("backup complete!");
-    //     })
-    //     .catch((err) => {
-    //         console.log("backup failed:", err);
-    //     });
+    checkEventJob.start();
+
+    const dbBackupJob = cron.CronJob.from({
+        cronTime: "00 00 03 */5 * *",
+        onTick: function() {
+            db.backup(`./backups/backup-${Date.now()}.db`)
+                .then(() => {
+                    console.log("backup complete!");
+                })
+                .catch((err) => {
+                    console.log("backup failed:", err);
+                });
+        },
+        timeZone: "Europe/Vienna"
+    });
+    dbBackupJob.start();
 });
 
 //automatisches Refreshen der Invites, bei Hinzufügen/Entfernen
