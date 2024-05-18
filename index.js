@@ -472,10 +472,9 @@ client.on(Discord.Events.MessageCreate, async (msg) => {
         if (config.blacklist.includes(msg.author.id)) {
             return;
         }
-        const normalTrainRole = msg.guild.roles.cache.find(r => r.id === config.TrainerRolle);
-        const trainRole = msg.guild.roles.cache.find(r => r.id === config.OnlineTrainerRolle);
-        const orgRole = msg.guild.roles.cache.find(r => r.id === config.OrganisationRolle);
-        if ((normalTrainRole) && (trainRole) && (orgRole) && (msg.member.roles) && ((msg.member.roles.cache.has(normalTrainRole.id)) || (msg.member.roles.cache.has(trainRole.id)) || (msg.member.roles.cache.has(orgRole.id)))) {
+
+        //Trainer:innen bekommen keine XP
+        if((msg.member.roles) && ((msg.member.roles.cache.has(config.TrainerRolle)) || (msg.member.roles.cache.has(config.OnlineTrainerRolle)) || (msg.member.roles.cache.has(config.OrganisationRolle)))) {
             return;
         }
 
