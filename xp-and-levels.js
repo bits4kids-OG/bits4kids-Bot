@@ -12,14 +12,23 @@ const path = require("path");
 //Vergabe von XP-Punkten
 
 const insertXP = db.prepare(`--sql
-INSERT INTO xpLevels (userId, guildId, level, xp, last_message)
-    VALUES (?, ?, ?, ?, ?)
-    ON CONFLICT(userId, guildId)
-    DO UPDATE SET
-        level = excluded.level,
-        xp = excluded.xp,
-        last_message = excluded.last_message;
+    INSERT INTO xpLevels_UserXPData (userId, guildId, level, xp, last_message)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(userId, guildId)
+        DO UPDATE SET
+            level = excluded.level,
+            xp = excluded.xp,
+            last_message = excluded.last_message;
 `);
+const insertXPHistory = db.prepare(`--sql
+    INSERT INTO xpLevels_HistoryData (userId, guildId, changeDate, level, xp)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(userId, guildId, changeDate)
+        DO UPDATE SET
+            level = excluded.level,
+            xp = excluded.xp;
+`);
+
 
 exports.addXP = function(msg, user, number, guildPrefix) {
     const userXP = utils.getXP(msg, user);
@@ -37,6 +46,9 @@ exports.addXP = function(msg, user, number, guildPrefix) {
         nextLevel(msg, user, guildPrefix, userXP);
     }
     insertXP.run(user.id, msg.guild.id, userXP.level, userXP.xp, userXP.last_message);
+
+    const todaysDate = new Date().setHours(0,0,0,0);
+    insertXPHistory.run(user.id, msg.guild.id, todaysDate, userXP.level, userXP.xp);
 };
 
 exports.removeXP = function(msg, user, number, guildPrefix) {
@@ -60,6 +72,9 @@ exports.removeXP = function(msg, user, number, guildPrefix) {
         }
     }
     insertXP.run(user.id, msg.guild.id, userXP.level, userXP.xp, userXP.last_message);
+
+    const todaysDate = new Date().setHours(0,0,0,0);
+    insertXPHistory.run(user.id, msg.guild.id, todaysDate, userXP.level, userXP.xp);
 
     if(levelDowngrade === true) nextLevel(msg, user, guildPrefix, userXP);
 };

@@ -9,13 +9,20 @@ const Database = require("better-sqlite3");
 const db = new Database("./b4kBot.db", {fileMustExist: true});
 
 const writeLevel = db.prepare(`--sql
-    INSERT INTO xpLevels (userId, guildId, level, xp, last_message)
+    INSERT INTO xpLevels_UserXPData (userId, guildId, level, xp, last_message)
         VALUES (?, ?, ?, ?, ?)
         ON CONFLICT(userId, guildId)
         DO UPDATE SET
             level = excluded.level,
             xp = excluded.xp,
             last_message = excluded.last_message;
+`);
+const insertXPHistory = db.prepare(`--sql
+    INSERT INTO xpLevels_HistoryData (userId, guildId, changeDate, level, xp)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(userId, guildId, changeDate)
+        DO UPDATE SET
+            level = excluded.level;
 `);
 
 module.exports = {
@@ -61,6 +68,9 @@ module.exports = {
             userXP.last_message = Date.now();
         
             writeLevel.run(user.id, msg.guild.id, userXP.level, userXP.xp, userXP.last_message);
+
+            const todaysDate = new Date().setHours(0,0,0,0);
+            insertXPHistory.run(user.id, msg.guild.id, todaysDate, userXP.level, userXP.xp);
 
             xp_levels.levelUp(msg, user, guildPrefix, userXP);
             msg.reply(`${user} wurde auf Level ${number} gesetzt!`);

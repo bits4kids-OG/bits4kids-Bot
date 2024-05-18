@@ -148,7 +148,7 @@ const stmt = db.prepare(`--sql
         xp,
         last_message,
         timeout
-    FROM xpLevels
+    FROM xpLevels_UserXPData
     WHERE userId = ? AND guildId = ?;
 `);
 

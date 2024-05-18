@@ -8,7 +8,7 @@ const Database = require("better-sqlite3");
 const db = new Database("./b4kBot.db", {fileMustExist: true});
 
 const writeXPtimeout = db.prepare(`--sql
-    INSERT INTO xpLevels (userId, guildId, timeout)
+    INSERT INTO xpLevels_UserXPData (userId, guildId, timeout)
         VALUES (?, ?, ?)
         ON CONFLICT(userId, guildId)
         DO UPDATE SET

@@ -9,7 +9,7 @@ const Database = require("better-sqlite3");
 const db = new Database("./b4kBot.db");
 
 db.exec(`--sql
-    CREATE TABLE IF NOT EXISTS xpLevels (
+    CREATE TABLE IF NOT EXISTS xpLevels_UserXPData (
         userId TEXT NOT NULL,
         guildId TEXT NOT NULL,
         level INTEGER,
@@ -21,7 +21,17 @@ db.exec(`--sql
     );
 `);
 db.exec(`--sql
-    CREATE TABLE IF NOT EXISTS userData (
+    CREATE TABLE IF NOT EXISTS xpLevels_HistoryData (
+        userId TEXT NOT NULL,
+        guildId TEXT NOT NULL,
+        changeDate INTEGER NOT NULL,
+        level INTEGER,
+        xp INTEGER,
+        PRIMARY KEY(userId, guildId, changeDate)
+    );
+`);
+db.exec(`--sql
+    CREATE TABLE IF NOT EXISTS users_UserBirthdayData (
         userId TEXT NOT NULL PRIMARY KEY,
         displayName TEXT,
         birthday INTEGER

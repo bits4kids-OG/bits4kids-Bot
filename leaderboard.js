@@ -7,58 +7,59 @@ const db = new Database("./b4kBot.db", {fileMustExist: true});
 
 
 exports.createLeaderboard = function() {
-    const date = new Date();
-    const currMonthTable = `xpLevelsMonthly_${date.toLocaleDateString("de-AT", { month: "long" })}_${date.getFullYear()}`;
-    createCurrentMonthlyCopy(currMonthTable);
-    const lastMonthTable = `xpLevelsMonthly_${date.addMonths(-1).toLocaleDateString("de-AT", { month: "long" })}_${date.getFullYear()}`;
-    console.log(lastMonthTable);
+    const oneMonthAgo = new Date().addMonths(-1).setHours(0,0,0,0);
     const leaderBoardTop10 = db.prepare(`--sql
-        WITH baseXpLevelData
+        WITH MonthOldXp
         AS (
             SELECT
-                c.userId,
-                c.guildId,
-                (c.level - COALESCE(l.level, 0)) AS levelDifference,
-                (c.xp - COALESCE(l.xp, 0)) AS xpDifference
-            FROM ${currMonthTable} c
-            LEFT JOIN ${lastMonthTable} l ON
-                c.userId = l.userId AND
-                c.guildId = l.guildId
+                history.userId,
+                history.guildId,
+                MIN(history.changeDate) AS changeDate,
+                history.level,
+                history.xp
+            FROM xpLevels_HistoryData history
+            LEFT JOIN xpLevels_UserXPData current ON
+                current.userId = history.userId
+                AND current.guildId = history.guildId
             WHERE
-                c.level IS NOT NULL
-                AND c.xp IS NOT NULL
-            ORDER BY
-                levelDifference DESC,
-                xpDifference DESC
+                acceptLB = 1
+                AND history.level IS NOT NULL
+                AND history.xp IS NOT NULL
+                AND history.changeDate >= ?
+            GROUP BY
+                history.userId,
+                history.guildId
+        ),
+        baseXpLevelData
+        AS (
+            SELECT
+                newest.userId,
+                newest.guildId,
+                (newest.level - COALESCE(oldest.level, 0)) AS levelDifference,
+                (newest.xp - COALESCE(oldest.xp, 0)) AS xpDifference
+            FROM xpLevels_UserXPData newest
+            LEFT JOIN MonthOldXp oldest ON
+                newest.userId = oldest.userId
+                AND newest.guildId = oldest.guildId
+            WHERE
+                acceptLB = 1
+                AND newest.level IS NOT NULL
+                AND newest.xp IS NOT NULL
         )
         SELECT
             userId,
             guildId,
             (1/6)*POWER(levelDifference,3) + 5*POWER(levelDifference,2) + 100*levelDifference + xpDifference AS totalXpDifference
         FROM baseXpLevelData
-        ORDER BY totalXpDifference
+        ORDER BY totalXpDifference DESC
         LIMIT 10;
-    `).all();
+    `).all(oneMonthAgo);
     console.log(leaderBoardTop10);
 };
 
-function createCurrentMonthlyCopy(currMonthTable) {
-    db.prepare(`--sql
-        CREATE TABLE IF NOT EXISTS ${currMonthTable}
-        AS
-        SELECT
-            userId,
-            guildId,
-            level,
-            xp
-        FROM xpLevels
-        WHERE acceptLB = 1;
-    `).run();
-}
-
 
 const writeLBOptin = db.prepare(`--sql
-INSERT INTO xpLevels (userId, guildId, acceptLB)
+INSERT INTO xpLevels_UserXPData (userId, guildId, acceptLB)
     VALUES (?, ?, ?)
     ON CONFLICT(userId, guildId)
     DO UPDATE SET
