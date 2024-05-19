@@ -113,12 +113,13 @@ async function uploadDataToDrive(data) {
 }
 
 async function uploadCSVToDrive(content) {
+    const fileName = `bits4kidsBot_LeaderBoardExport_${new Date().toLocaleDateString("en-CA", { dateStyle: "short" }).replaceAll("-","_")}`;
     const scopes = ["https://www.googleapis.com/auth/drive"];
 
     const auth = new google.auth.GoogleAuth({keyFile: "./credentials.json", scopes: scopes});
     const drive = google.drive({version: "v3", auth});
     const fileMetaData = {
-        name: "bits4kidsBot_LeaderBoardExport",
+        name: fileName,
         parents: [config.driveExportFolderId],
         mimeType: "text/csv"
     };
@@ -132,7 +133,6 @@ async function uploadCSVToDrive(content) {
             media: media,
             fields: "id, webViewLink"
         });
-        console.log(res);
         return(res.data);
     } catch (err) {
         console.error(err);

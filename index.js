@@ -159,7 +159,15 @@ client.on(Discord.Events.ClientReady, async () => {
     });
     dbBackupJob.start();
 
-    await leaderboard.createLeaderboard(client);
+
+    const exportLeaderBoard = cron.CronJob.from({
+        cronTime: "00 30 03 * * *",
+        onTick: async function() {
+            await leaderboard.createLeaderboard(client);
+        },
+        timeZone: "Europe/Vienna"
+    });
+    exportLeaderBoard.start();
 });
 
 //automatisches Refreshen der Invites, bei Hinzufügen/Entfernen
