@@ -39,7 +39,6 @@ db.exec(`--sql
 `);
 
 const leaderboard = require("./leaderboard.js");
-leaderboard.createLeaderboard();
 
 
 const config = require("./config.json");
@@ -103,7 +102,7 @@ for (const file of commandFiles) {
 
 //Login
 
-client.on(Discord.Events.ClientReady, () => {
+client.on(Discord.Events.ClientReady, async () => {
     console.log(`Logged in as ${client.user.tag}!`);
     client.user
         .setPresence({ activities: [{ name: `-> ${defaultPrefix}help <-` }], status: "online" });
@@ -159,6 +158,8 @@ client.on(Discord.Events.ClientReady, () => {
         timeZone: "Europe/Vienna"
     });
     dbBackupJob.start();
+
+    await leaderboard.createLeaderboard(client);
 });
 
 //automatisches Refreshen der Invites, bei Hinzufügen/Entfernen

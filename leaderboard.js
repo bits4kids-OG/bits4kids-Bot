@@ -1,12 +1,12 @@
-const Discord = require("discord.js");
-const utils = require("./utils.js");
 const config = require("./config.json");
+
+const {google} = require("googleapis");
 
 const Database = require("better-sqlite3");
 const db = new Database("./b4kBot.db", {fileMustExist: true});
 
 
-exports.createLeaderboard = function() {
+exports.createLeaderboard = async function(client) {
     const oneMonthAgo = new Date().addMonths(-1).setHours(0,0,0,0);
     const leaderBoardTop10 = db.prepare(`--sql
         WITH MonthOldXp
@@ -55,6 +55,23 @@ exports.createLeaderboard = function() {
         LIMIT 10;
     `).all(oneMonthAgo);
     console.log(leaderBoardTop10);
+
+    let data = [];
+    let contentString = "UserName;TotalXpDifferenceLast30Days;GuildName;UserId;GuildId\n";
+    for(const rows in leaderBoardTop10) {
+        const rowOrig = leaderBoardTop10[rows];
+        let user = client.users.cache.get(rowOrig.userId);
+        if(!user) user = await client.users.fetch(rowOrig.userId).catch(console.error) ?? {tag: ""};
+        let guild = client.guilds.cache.get(rowOrig.guildId);
+        if(!guild) guild = await client.guilds.fetch(rowOrig.guildId).catch(console.error) ?? {name: ""};
+        data.push(
+            [user.tag, rowOrig.totalXpDifference, guild.name, rowOrig.userId, rowOrig.guildId]
+        );
+        contentString = contentString + `"${user.tag.replaceAll("\"", "\"\"")}";${rowOrig.totalXpDifference};"${guild.name}";${rowOrig.userId};${rowOrig.guildId}\n`;
+    }
+    console.log(data);
+    await uploadDataToDrive(data);
+    await uploadCSVToDrive(contentString);
 };
 
 
@@ -70,3 +87,54 @@ INSERT INTO xpLevels_UserXPData (userId, guildId, acceptLB)
 exports.changeAcceptLB = function(button, optState) {
     writeLBOptin.run(button.user.id, button.guildId, optState);
 };
+
+
+async function uploadDataToDrive(data) {
+    const scopes = ["https://www.googleapis.com/auth/spreadsheets"];
+
+    const auth = new google.auth.GoogleAuth({keyFile: "./credentials.json", scopes: scopes});
+    const service = google.sheets({version: "v4", auth});
+
+    const resource = {
+        values: data
+    };
+    try {
+        const result = await service.spreadsheets.values.update({
+            spreadsheetId: config.driveExportSheetId,
+            range: "LeaderBoardData!A2",
+            valueInputOption: "RAW",
+            resource
+        });
+        console.log("%d cells updated.", result.data.updatedCells);
+        return result;
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+async function uploadCSVToDrive(content) {
+    const scopes = ["https://www.googleapis.com/auth/drive"];
+
+    const auth = new google.auth.GoogleAuth({keyFile: "./credentials.json", scopes: scopes});
+    const drive = google.drive({version: "v3", auth});
+    const fileMetaData = {
+        name: "bits4kidsBot_LeaderBoardExport",
+        parents: [config.driveExportFolderId],
+        mimeType: "text/csv"
+    };
+    const media = {
+        mimeType: "text/csv",
+        body: content,
+    };
+    try {
+        const res = await drive.files.create({
+            requestBody: fileMetaData,
+            media: media,
+            fields: "id, webViewLink"
+        });
+        console.log(res);
+        return(res.data);
+    } catch (err) {
+        console.error(err);
+    }
+}
