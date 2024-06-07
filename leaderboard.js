@@ -36,8 +36,8 @@ exports.createLeaderboard = async function(client) {
                 current.userId = history.userId
                 AND current.guildId = history.guildId
             WHERE
-                acceptLB = 1
-                AND history.level IS NOT NULL
+                --acceptLB = 1 AND
+                history.level IS NOT NULL
                 AND history.xp IS NOT NULL
                 AND history.changeDate >= ?
             GROUP BY
@@ -65,8 +65,9 @@ exports.createLeaderboard = async function(client) {
             guildId,
             (1/6)*POWER(levelDifference,3) + 5*POWER(levelDifference,2) + 100*levelDifference + xpDifference AS totalXpDifference
         FROM baseXpLevelData
-        ORDER BY totalXpDifference DESC
-        LIMIT 10;
+        WHERE totalXpDifference > 0
+        ORDER BY totalXpDifference DESC;
+        --LIMIT 10;
     `).all(oneMonthAgo);
     console.log(leaderBoardTop10);
 

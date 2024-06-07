@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const Discord = require("discord.js");
 
 const myIntents = new Discord.IntentsBitField();
@@ -537,7 +539,9 @@ client.on(Discord.Events.GuildCreate, async (guild) => {
     });
 });
 
-client.login(config.tokenTest);
+let token = config.token;
+if(process.env.NODE_ENV && process.env.NODE_ENV === "testing") token = config.tokenTest;
+client.login(token);
 
 
 function voicelogLeftChannel(member, newState, oldState, VoiceLogChannel) {
