@@ -1,9 +1,23 @@
-const config = require("./config.json");
+const lbConfig = require("./leaderboardConfig.json");
 
 const {google} = require("googleapis");
 
 const Database = require("better-sqlite3");
 const db = new Database("./b4kBot.db", {fileMustExist: true});
+
+
+const writeLBOptin = db.prepare(`--sql
+    INSERT INTO xpLevels_UserXPData (userId, guildId, acceptLB)
+        VALUES (?, ?, ?)
+        ON CONFLICT(userId, guildId)
+        DO UPDATE SET
+            acceptLB = excluded.acceptLB
+            WHERE acceptLB <> excluded.acceptLB;
+    `);
+    
+exports.changeAcceptLB = function(button, optState) {
+    writeLBOptin.run(button.user.id, button.guildId, optState);
+};
 
 
 exports.createLeaderboard = async function(client) {
@@ -75,20 +89,6 @@ exports.createLeaderboard = async function(client) {
 };
 
 
-const writeLBOptin = db.prepare(`--sql
-INSERT INTO xpLevels_UserXPData (userId, guildId, acceptLB)
-    VALUES (?, ?, ?)
-    ON CONFLICT(userId, guildId)
-    DO UPDATE SET
-        acceptLB = excluded.acceptLB
-        WHERE acceptLB <> excluded.acceptLB;
-`);
-
-exports.changeAcceptLB = function(button, optState) {
-    writeLBOptin.run(button.user.id, button.guildId, optState);
-};
-
-
 async function uploadDataToDrive(data) {
     const scopes = ["https://www.googleapis.com/auth/spreadsheets"];
 
@@ -100,7 +100,7 @@ async function uploadDataToDrive(data) {
     };
     try {
         const result = await service.spreadsheets.values.update({
-            spreadsheetId: config.driveExportSheetId,
+            spreadsheetId: lbConfig.driveExportSheetId,
             range: "LeaderBoardData!A2",
             valueInputOption: "RAW",
             resource
@@ -120,7 +120,7 @@ async function uploadCSVToDrive(content) {
     const drive = google.drive({version: "v3", auth});
     const fileMetaData = {
         name: fileName,
-        parents: [config.driveExportFolderId],
+        parents: [lbConfig.driveExportFolderId],
         mimeType: "text/csv"
     };
     const media = {

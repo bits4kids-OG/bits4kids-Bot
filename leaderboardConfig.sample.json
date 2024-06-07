@@ -1,0 +1,4 @@
+{
+    "driveExportSheetId": "ID of the Google Drive Sheet File used for XP export",
+    "driveExportFolderId": "ID of the Google Drive Folder used for XP export"
+}

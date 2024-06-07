@@ -21,7 +21,5 @@
     "GameJamChannel": "GameJam category channel ID",
     "BeginnerRolle": "Name of the beginner role (string)",
     "reactGreen": "Emoji ID of a green guild emoji used for the +umfrage command",
-    "reactRed": "Emoji ID of a red guild emoji used for the +umfrage command",
-    "driveExportSheetId": "ID of the Google Drive Sheet File used for XP export",
-    "driveExportFolderId": "ID of the Google Drive Folder used for XP export"
+    "reactRed": "Emoji ID of a red guild emoji used for the +umfrage command"
   }
