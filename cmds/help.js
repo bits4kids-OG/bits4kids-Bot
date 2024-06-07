@@ -20,7 +20,7 @@ module.exports = {
                 .addFields([
                     { name: "Levelsystem", value: "\u200b" },
                     { name: `${guildPrefix}xp`, value: `Zeigt die gespeicherten XP und Levels eines einzelnen Benutzer auf diesem Server an. Benötigt die Berechtigung "Manage Roles". Korrekte Benutzung: ${guildPrefix}xp @user`, inline: true },
-                    { name: `${guildPrefix}showxp`, value: "Zeigt die gespeicherten XP und Levels für alle Benutzer auf diesem Server an. Als Output wird eine Excel-Datei erzeugt. Benötigt die Berechtigung \"Manage Roles\".", inline: true },
+                    { name: `${guildPrefix}showxp`, value: `Zeigt die gespeicherten XP und Levels für alle Benutzer auf diesem Server an. Als Output wird eine Excel-Datei erzeugt.\nOptional: ${guildPrefix}showxp old. Zeigt auch die XP aus der veralteten .json Datei an. Benötigt die Berechtigung "Manage Roles".`, inline: true },
                     { name: `${guildPrefix}addxp`, value: "Gibt einem Benutzer eine bestimmte Anzahl an xp. Benötigt die Berechtigung \"Manage Roles\".", inline: true },
                     { name: `${guildPrefix}setlevel`, value: `ACHTUNG: Dieser Command vergibt keine Badges; Benutze stattdessen ${guildPrefix}levelup oder ${guildPrefix}addxp. Setzt einen Benutzer auf das angegebene xp-Level. Benötigt die Berechtigung "Manage Roles".`, inline: true },
                     { name: `${guildPrefix}levelup`, value: "Setzt einen Benutzer auf das nächste xp-Level. Benötigt die Berechtigung \"Manage Roles\".", inline: true },
