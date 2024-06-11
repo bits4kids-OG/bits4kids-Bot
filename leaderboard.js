@@ -56,8 +56,8 @@ exports.createLeaderboard = async function(client) {
                 newest.userId = oldest.userId
                 AND newest.guildId = oldest.guildId
             WHERE
-                acceptLB = 1
-                AND newest.level IS NOT NULL
+                --acceptLB = 1 AND
+                newest.level IS NOT NULL
                 AND newest.xp IS NOT NULL
         )
         SELECT
@@ -106,7 +106,7 @@ async function uploadDataToDrive(data) {
             valueInputOption: "RAW",
             resource
         });
-        console.log("%d cells updated.", result.data.updatedCells);
+        console.log(`${result.data.updatedCells ?? 0} cells updated.`);
         return result;
     } catch (err) {
         console.log(err);
