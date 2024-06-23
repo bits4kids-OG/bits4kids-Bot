@@ -170,6 +170,7 @@ client.on(Discord.Events.ClientReady, async () => {
         timeZone: "Europe/Vienna"
     });
     exportLeaderBoard.start();
+    await leaderboard.createLeaderboard(client);
 });
 
 //automatisches Refreshen der Invites, bei Hinzufügen/Entfernen

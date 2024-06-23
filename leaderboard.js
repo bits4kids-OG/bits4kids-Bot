@@ -5,6 +5,10 @@ const {google} = require("googleapis");
 const Database = require("better-sqlite3");
 const db = new Database("./b4kBot.db", {fileMustExist: true});
 
+const Discord = require("discord.js");
+const canvacord = require("canvacord");
+const { LeaderboardCanvas } = require("./leaderboardCanvas.js");
+
 
 const writeLBOptin = db.prepare(`--sql
     INSERT INTO xpLevels_UserXPData (userId, guildId, acceptLB)
@@ -73,6 +77,7 @@ exports.createLeaderboard = async function(client) {
 
     let data = [];
     let contentString = "UserName;TotalXpDifferenceLast30Days;GuildName;UserId;GuildId\n";
+    let canvasData = [];
     for(const rows in leaderBoardTop10) {
         const rowOrig = leaderBoardTop10[rows];
         let user = client.users.cache.get(rowOrig.userId);
@@ -83,10 +88,16 @@ exports.createLeaderboard = async function(client) {
             [user.tag, rowOrig.totalXpDifference, guild.name, rowOrig.userId, rowOrig.guildId]
         );
         contentString = contentString + `"${user.tag.replaceAll("\"", "\"\"")}";${rowOrig.totalXpDifference};"${guild.name}";${rowOrig.userId};${rowOrig.guildId}\n`;
+        canvasData.push({
+            displayName: user.tag,
+            avatarURL: user.avatarURL(),
+            totalXpDifference: rowOrig.totalXpDifference,
+        });
     }
     console.log(data);
-    await uploadDataToDrive(data);
-    await uploadCSVToDrive(contentString);
+    await buildLeaderboardCanvas(client, canvasData);
+    // await uploadDataToDrive(data);
+    // await uploadCSVToDrive(contentString);
 };
 
 
@@ -138,4 +149,21 @@ async function uploadCSVToDrive(content) {
     } catch (err) {
         console.error(err);
     }
+}
+
+canvacord.Font.loadDefault();
+async function buildLeaderboardCanvas(client, canvasData) {
+    console.log(canvasData);
+    const card = new LeaderboardCanvas()
+        .setAvatar(canvasData[0].avatarURL)
+        .setDisplayName(canvasData[0].displayName)
+        .setType("welcome")
+        .setMessage("Testing");
+    const image = await card.build({ format: "png" });
+    const imageMsg = new Discord.AttachmentBuilder(Buffer.from(image), {name: "LeaderBoard.png"});
+    const user = await client.users.fetch("140483524351229952");
+    user.send({
+        content: "LeaderBoard:",
+        files: [imageMsg],
+    });
 }
