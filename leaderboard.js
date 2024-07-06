@@ -88,11 +88,13 @@ exports.createLeaderboard = async function(client) {
             [user.tag, rowOrig.totalXpDifference, guild.name, rowOrig.userId, rowOrig.guildId]
         );
         contentString = contentString + `"${user.tag.replaceAll("\"", "\"\"")}";${rowOrig.totalXpDifference};"${guild.name}";${rowOrig.userId};${rowOrig.guildId}\n`;
-        canvasData.push({
-            displayName: user.tag,
-            avatarURL: user.avatarURL(),
-            totalXpDifference: rowOrig.totalXpDifference,
-        });
+        if(canvasData.length < lbConfig.maxRankInCanvas) {
+            canvasData.push({
+                displayName: user.tag,
+                avatarURL: user.avatarURL(),
+                totalXpDifference: rowOrig.totalXpDifference,
+            });
+        }
     }
     console.log(data);
     await buildLeaderboardCanvas(client, canvasData);
@@ -154,14 +156,14 @@ async function uploadCSVToDrive(content) {
 canvacord.Font.loadDefault();
 async function buildLeaderboardCanvas(client, canvasData) {
     console.log(canvasData);
-    const card = new LeaderboardCanvas()
+    const card = new LeaderboardCanvas(canvasData.length)
         .setAvatar(canvasData[0].avatarURL)
         .setDisplayName(canvasData[0].displayName)
         .setType("welcome")
         .setMessage("Testing");
     const image = await card.build({ format: "png" });
-    const imageMsg = new Discord.AttachmentBuilder(Buffer.from(image), {name: "LeaderBoard.png"});
-    const user = await client.users.fetch("140483524351229952");
+    const imageMsg = new Discord.AttachmentBuilder(image, {name: "LeaderBoard.png"});
+    const user = await client.users.fetch(lbConfig.sendToUserId);
     user.send({
         content: "LeaderBoard:",
         files: [imageMsg],

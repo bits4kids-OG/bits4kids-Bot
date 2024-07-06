@@ -1,8 +1,9 @@
 const canvacord = require("canvacord");
+const lbConfig = require("./leaderboardConfig.json");
 
 class LeaderboardCanvas extends canvacord.Builder {
-    constructor() {
-        super(930,280);
+    constructor(size = 5) {
+        super(930,(930/(lbConfig.maxRankInCanvas/size)));
         this.bootstrap({
             displayname: "",
             type: "welcome",
