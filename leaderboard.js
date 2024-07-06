@@ -8,6 +8,7 @@ const db = new Database("./b4kBot.db", {fileMustExist: true});
 const Discord = require("discord.js");
 const canvacord = require("canvacord");
 const { LeaderboardCanvas } = require("./leaderboardCanvas.js");
+const utils = require("./utils.js");
 
 
 const writeLBOptin = db.prepare(`--sql
@@ -24,7 +25,7 @@ exports.changeAcceptLB = function(button, optState) {
 };
 
 
-exports.createLeaderboard = async function(client) {
+exports.createLeaderboard = async function(client, guildId = lbConfig.defaultGuildId) {
     const oneMonthAgo = new Date().addMonths(-1).setHours(0,0,0,0);
     const leaderBoardTop10 = db.prepare(`--sql
         WITH MonthOldXp
@@ -40,7 +41,7 @@ exports.createLeaderboard = async function(client) {
                 current.userId = history.userId
                 AND current.guildId = history.guildId
             WHERE
-                --acceptLB = 1 AND
+                --current.acceptLB = 1 AND
                 history.level IS NOT NULL
                 AND history.xp IS NOT NULL
                 AND history.changeDate >= ?
@@ -69,21 +70,31 @@ exports.createLeaderboard = async function(client) {
             guildId,
             (1/6)*POWER(levelDifference,3) + 5*POWER(levelDifference,2) + 100*levelDifference + xpDifference AS totalXpDifference
         FROM baseXpLevelData
-        WHERE totalXpDifference > 0
+        WHERE
+            totalXpDifference > 0 AND
+            guildId = ?
         ORDER BY totalXpDifference DESC;
         --LIMIT 10;
-    `).all(oneMonthAgo);
+    `).all(oneMonthAgo, guildId);
     console.log(leaderBoardTop10);
 
+    let guild = client.guilds.cache.get(guildId);
+    if(!guild) guild = await client.guilds.fetch(guildId).catch(console.error) ?? {
+        name: "",
+        iconURL: () => "https://cdn.discordapp.com/embed/avatars/1.png",
+    };
     let data = [];
     let contentString = "UserName;TotalXpDifferenceLast30Days;GuildName;UserId;GuildId\n";
     let canvasData = [];
     for(const rows in leaderBoardTop10) {
         const rowOrig = leaderBoardTop10[rows];
         let user = client.users.cache.get(rowOrig.userId);
-        if(!user) user = await client.users.fetch(rowOrig.userId).catch(console.error) ?? {tag: ""};
-        let guild = client.guilds.cache.get(rowOrig.guildId);
-        if(!guild) guild = await client.guilds.fetch(rowOrig.guildId).catch(console.error) ?? {name: ""};
+        if(!user) user = await client.users.fetch(rowOrig.userId).catch(console.error) ?? {
+            tag: "",
+            username: "User not found",
+            displayName: "User not found",
+            displayAvatarURL: () => "https://cdn.discordapp.com/embed/avatars/1.png",
+        };
         data.push(
             [user.tag, rowOrig.totalXpDifference, guild.name, rowOrig.userId, rowOrig.guildId]
         );
@@ -97,7 +108,7 @@ exports.createLeaderboard = async function(client) {
         });
     }
     console.log(data);
-    await buildLeaderboardCanvas(client, canvasData);
+    if(canvasData.length > 0) await buildLeaderboardCanvas(client, canvasData, guild);
     // await uploadDataToDrive(data);
     // await uploadCSVToDrive(contentString);
 };
@@ -154,12 +165,11 @@ async function uploadCSVToDrive(content) {
 }
 
 canvacord.Font.loadDefault();
-async function buildLeaderboardCanvas(client, canvasData) {
-    console.log(canvasData);
+async function buildLeaderboardCanvas(client, canvasData, guild) {
     const card = new canvacord.LeaderboardBuilder()
         .setHeader({
-            title: "bits4kids",
-            image: "https://www.koala-online.at/wp-content/uploads/2021/07/bits4kids_Logo_color@3x.png",
+            title: guild.name,
+            image: guild.iconURL(),
             subtitle: `Leaderboard ${new Date().toLocaleDateString("de-AT", { dateStyle: "medium" })}`
         })
         .setTextStyles({
@@ -167,12 +177,16 @@ async function buildLeaderboardCanvas(client, canvasData) {
         })
         .setPlayers(canvasData)
         .setVariant("default");
-    console.log(card);
-    const image = await card.build({ format: "png" });
-    const imageMsg = new Discord.AttachmentBuilder(image, {name: "LeaderBoard.png"});
-    const user = await client.users.fetch(lbConfig.sendToUserId);
-    user.send({
-        content: "LeaderBoard:",
-        files: [imageMsg],
-    });
+    try {
+        const image = await card.build({ format: "png" });
+        const imageMsg = new Discord.AttachmentBuilder(image, {name: "LeaderBoard.png"});
+        const user = await client.users.fetch(lbConfig.sendToUserId);
+        user.send({
+            content: "LeaderBoard:",
+            files: [imageMsg],
+        });
+    } catch (error) {
+        const logChannel = utils.findLogChannel(guild);
+        logChannel?.send("Encountered an error while trying to create the leaderboard canvas!", error);
+    }
 }

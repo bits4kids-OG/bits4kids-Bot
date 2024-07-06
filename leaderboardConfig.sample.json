@@ -1,5 +1,6 @@
 {
     "driveExportSheetId": "Id of the Google Drive Sheet File used for XP export",
     "driveExportFolderId": "Id of the Google Drive Folder used for XP export",
+    "defaultGuildId": "Id of the guild for which the leaderboard will be exported",
     "sendToUserId": "UserId of the recipient"
 }
