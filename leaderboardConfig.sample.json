@@ -1,6 +1,5 @@
 {
     "driveExportSheetId": "Id of the Google Drive Sheet File used for XP export",
     "driveExportFolderId": "Id of the Google Drive Folder used for XP export",
-    "sendToUserId": "UserId of the recipient",
-    "maxRankInCanvas": 5
+    "sendToUserId": "UserId of the recipient"
 }

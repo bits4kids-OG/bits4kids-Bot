@@ -88,13 +88,13 @@ exports.createLeaderboard = async function(client) {
             [user.tag, rowOrig.totalXpDifference, guild.name, rowOrig.userId, rowOrig.guildId]
         );
         contentString = contentString + `"${user.tag.replaceAll("\"", "\"\"")}";${rowOrig.totalXpDifference};"${guild.name}";${rowOrig.userId};${rowOrig.guildId}\n`;
-        if(canvasData.length < lbConfig.maxRankInCanvas) {
-            canvasData.push({
-                displayName: user.tag,
-                avatarURL: user.avatarURL(),
-                totalXpDifference: rowOrig.totalXpDifference,
-            });
-        }
+        canvasData.push({
+            username: user.username,
+            displayName: user.displayName,
+            avatar: user.displayAvatarURL(),
+            xp: rowOrig.totalXpDifference,
+            rank: canvasData.length + 1
+        });
     }
     console.log(data);
     await buildLeaderboardCanvas(client, canvasData);
@@ -156,11 +156,18 @@ async function uploadCSVToDrive(content) {
 canvacord.Font.loadDefault();
 async function buildLeaderboardCanvas(client, canvasData) {
     console.log(canvasData);
-    const card = new LeaderboardCanvas(canvasData.length)
-        .setAvatar(canvasData[0].avatarURL)
-        .setDisplayName(canvasData[0].displayName)
-        .setType("welcome")
-        .setMessage("Testing");
+    const card = new canvacord.LeaderboardBuilder()
+        .setHeader({
+            title: "bits4kids",
+            image: "https://www.koala-online.at/wp-content/uploads/2021/07/bits4kids_Logo_color@3x.png",
+            subtitle: `Leaderboard ${new Date().toLocaleDateString("de-AT", { dateStyle: "medium" })}`
+        })
+        .setTextStyles({
+            level: "XP Difference:"
+        })
+        .setPlayers(canvasData)
+        .setVariant("default");
+    console.log(card);
     const image = await card.build({ format: "png" });
     const imageMsg = new Discord.AttachmentBuilder(image, {name: "LeaderBoard.png"});
     const user = await client.users.fetch(lbConfig.sendToUserId);
