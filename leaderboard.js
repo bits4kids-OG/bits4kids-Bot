@@ -108,7 +108,7 @@ exports.createLeaderboard = async function(client, guildId = lbConfig.defaultGui
         });
     }
     console.log(data);
-    if(canvasData.length > 0) await buildLeaderboardCanvas(client, canvasData, guild);
+    if(canvasData.length > 0) await buildLeaderboardCanvas(client, canvasData, guild, oneMonthAgo);
     // await uploadDataToDrive(data);
     // await uploadCSVToDrive(contentString);
 };
@@ -165,16 +165,17 @@ async function uploadCSVToDrive(content) {
 }
 
 canvacord.Font.loadDefault();
-async function buildLeaderboardCanvas(client, canvasData, guild) {
+async function buildLeaderboardCanvas(client, canvasData, guild, oneMonthAgo) {
     const card = new canvacord.LeaderboardBuilder()
         .setHeader({
             title: guild.name,
             image: guild.iconURL(),
-            subtitle: `Leaderboard ${new Date().toLocaleDateString("de-AT", { dateStyle: "medium" })}`
+            subtitle: `Leaderboard ${new Date(oneMonthAgo).toLocaleDateString("de-AT", { dateStyle: "medium" })} - ${new Date().toLocaleDateString("de-AT", { dateStyle: "medium" })}`
         })
         .setTextStyles({
             level: "XP Difference:"
         })
+        .setBackground(lbConfig.backgroundImage)
         .setPlayers(canvasData)
         .setVariant("default");
     try {
