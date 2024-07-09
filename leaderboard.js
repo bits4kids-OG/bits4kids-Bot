@@ -37,14 +37,10 @@ exports.createLeaderboard = async function(client, guildId = lbConfig.defaultGui
                 history.level,
                 history.xp
             FROM xpLevels_HistoryData history
-            LEFT JOIN xpLevels_UserXPData current ON
-                current.userId = history.userId
-                AND current.guildId = history.guildId
             WHERE
-                --current.acceptLB = 1 AND
-                history.level IS NOT NULL
-                AND history.xp IS NOT NULL
-                AND history.changeDate >= ?
+                history.level IS NOT NULL AND
+                history.xp IS NOT NULL AND
+                history.changeDate >= ?
             GROUP BY
                 history.userId,
                 history.guildId
@@ -54,16 +50,16 @@ exports.createLeaderboard = async function(client, guildId = lbConfig.defaultGui
             SELECT
                 newest.userId,
                 newest.guildId,
+                newest.acceptLB,
                 (newest.level - COALESCE(oldest.level, 0)) AS levelDifference,
                 (newest.xp - COALESCE(oldest.xp, 0)) AS xpDifference
             FROM xpLevels_UserXPData newest
             LEFT JOIN MonthOldXp oldest ON
-                newest.userId = oldest.userId
-                AND newest.guildId = oldest.guildId
+                newest.userId = oldest.userId AND
+                newest.guildId = oldest.guildId
             WHERE
-                --acceptLB = 1 AND
-                newest.level IS NOT NULL
-                AND newest.xp IS NOT NULL
+                newest.level IS NOT NULL AND
+                newest.xp IS NOT NULL
         )
         SELECT
             userId,
@@ -71,6 +67,7 @@ exports.createLeaderboard = async function(client, guildId = lbConfig.defaultGui
             (1/6)*POWER(levelDifference,3) + 5*POWER(levelDifference,2) + 100*levelDifference + xpDifference AS totalXpDifference
         FROM baseXpLevelData
         WHERE
+            --acceptLB = 1 AND
             totalXpDifference > 0 AND
             guildId = ?
         ORDER BY totalXpDifference DESC;
