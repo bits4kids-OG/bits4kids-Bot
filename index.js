@@ -46,6 +46,7 @@ const leaderboard = require("./leaderboard.js");
 const config = require("./config.json");
 const { version } = require("./package.json");
 const fs = require("fs");
+const path = require("path");
 
 const cron = require("cron");
 
@@ -88,6 +89,8 @@ const invites = {};
 let fromWhere = {};
 
 let voicelogUsers = {};
+
+const backupFileNames = getAllBackupFiles(process.cwd());
 
 let defaultPrefix = config.defaultPrefix;
 
@@ -139,38 +142,31 @@ client.on(Discord.Events.ClientReady, async () => {
 
     const checkEventJob = cron.CronJob.from({
         cronTime: "00 00 03,15,20 * * *",
-        onTick: async function() {
+        onTick: async () => {
             await driveAutoEvents.createEvents(client);
         },
         timeZone: "Europe/Vienna"
     });
     checkEventJob.start();
 
-    const dbBackupJob = cron.CronJob.from({
+    const doBackupJob = cron.CronJob.from({
         cronTime: "00 00 03 */5 * *",
-        onTick: function() {
-            db.backup(`./backups/backup-${Date.now()}.db`)
-                .then(() => {
-                    console.log("backup complete!");
-                })
-                .catch((err) => {
-                    console.log("backup failed:", err);
-                });
+        onTick: () => {
+            doBackup(backupFileNames);
         },
         timeZone: "Europe/Vienna"
     });
-    dbBackupJob.start();
+    doBackupJob.start();
 
 
     const exportLeaderBoard = cron.CronJob.from({
         cronTime: "00 30 03 * * *",
-        onTick: async function() {
+        onTick: async () => {
             await leaderboard.createLeaderboard(client);
         },
         timeZone: "Europe/Vienna"
     });
     exportLeaderBoard.start();
-    await leaderboard.createLeaderboard(client);
 });
 
 //automatisches Refreshen der Invites, bei Hinzufügen/Entfernen
@@ -582,6 +578,47 @@ function getPrefix(guildId) {
     } else {
         return prefixes[guildId];
     }
+}
+
+function getAllBackupFiles(dirname) {
+    const pattern = /^(?!package)(?!.*(?:config|sample|real|credentials)\.json$).+\.json$/i;
+    try {
+        const files = fs.readdirSync(dirname);
+        const matchingFileNames = files.filter((file) => pattern.test(file));
+        return matchingFileNames;
+    } catch (error) {
+        console.error(error);
+        return [];
+    }
+}
+
+function doBackup(backupFiles) {
+    const backupDir = `./backups/backup-${Date.now()}/`;
+    if (!fs.existsSync(backupDir)) {
+        fs.mkdirSync(backupDir);
+    }
+    db.backup(path.join(backupDir, "dbBackup.db"))
+        .then(() => {
+            console.log("backup complete!");
+        })
+        .catch((err) => {
+            console.log("backup failed:", err);
+        });
+    doFilesBackup(backupFiles, process.cwd(), backupDir);
+}
+
+function doFilesBackup(backupFiles, sourceDirectory, backupDir) {
+    console.log(backupFiles);
+    backupFiles.forEach((file) => {
+        const srcDir = path.join(sourceDirectory, file);
+        const destDir = path.join(backupDir, `backup-${file}`);
+        fs.copyFile(srcDir, destDir, (err) => {
+            if(err) {
+                return console.error(`Error copying file ${file}:`, err);
+            }
+            console.log(`Successfully backed up ${file}!`);
+        });
+    });
 }
 
 exports.refresh = async function(msg) {

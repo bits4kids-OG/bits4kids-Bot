@@ -48,7 +48,7 @@ The bits4kids-Discord bot helps *Coding Trainers* manage *Online Coding Clubs* o
     - The badges do not have to be in any specific order
 1. Copy `leaderboardConfig.sample.json` to `leaderboardConfig.json`
 1. Configure all options in `leaderboardConfig.json`
-    - The spreadsheet and folder ID can be obtained using the Google Drive URL of the Google Drive items
+    - The image, spreadsheet and folder ID can be obtained using the Google Drive URL of the Google Drive items
 1. Copy `OCCconfig.sample.json` to `OCCconfig.json`
 1. Configure all options in `OCCconfig.json` as preferred
     - The spreadsheet ID can be obtained using the Google Drive URL of the Google Sheets file

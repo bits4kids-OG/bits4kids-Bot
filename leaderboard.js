@@ -187,15 +187,10 @@ async function buildLeaderboardCanvas(canvasData, guild, oneMonthAgo) {
 }
 
 async function uploadCanvasToDrive(canvas) {
-    // const fileName = `bits4kidsBot_LeaderBoardExportCanvas_${new Date().toLocaleDateString("en-CA", { dateStyle: "short" }).replaceAll("-","_")}.png`;
     const scopes = ["https://www.googleapis.com/auth/drive"];
 
     const auth = new google.auth.GoogleAuth({ keyFile: "./credentials.json", scopes: scopes });
     const drive = google.drive({ version: "v3", auth });
-    // const fileMetaData = {
-    //     // name: fileName,
-    //     parents: [lbConfig.driveExportFolderId]
-    // };
     const media = {
         mimeType: "image/png",
         body: stream.Readable.from(canvas),
@@ -203,7 +198,6 @@ async function uploadCanvasToDrive(canvas) {
     try {
         const res = await drive.files.update({
             fileId: lbConfig.driveExportCanvasId,
-            // requestBody: fileMetaData,
             media: media,
             fields: "id, webViewLink"
         });
