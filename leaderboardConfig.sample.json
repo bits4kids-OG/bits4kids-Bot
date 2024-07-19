@@ -1,7 +1,6 @@
 {
     "driveExportSheetId": "Id of the Google Drive Sheet File used for XP export",
     "driveExportFolderId": "Id of the Google Drive Folder used for XP export",
-    "defaultGuildId": "Id of the guild for which the leaderboard will be exported",
-    "sendToUserId": "UserId of the recipient",
-    "backgroundImage": "URL to the background image for the leaderboard canvas.jpg"
+    "driveExportCanvasId": "Id of the Google Drive canvas image used for XP export",
+    "defaultGuildId": "Id of the guild for which the leaderboard will be exported"
 }

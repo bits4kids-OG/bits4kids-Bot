@@ -5,9 +5,9 @@ const {google} = require("googleapis");
 const Database = require("better-sqlite3");
 const db = new Database("./b4kBot.db", {fileMustExist: true});
 
-const Discord = require("discord.js");
+const stream = require("stream");
+
 const canvacord = require("canvacord");
-const { LeaderboardCanvas } = require("./leaderboardCanvas.js");
 const utils = require("./utils.js");
 
 
@@ -38,8 +38,6 @@ exports.createLeaderboard = async function(client, guildId = lbConfig.defaultGui
                 history.xp
             FROM xpLevels_HistoryData history
             WHERE
-                history.level IS NOT NULL AND
-                history.xp IS NOT NULL AND
                 history.changeDate >= ?
             GROUP BY
                 history.userId,
@@ -54,7 +52,7 @@ exports.createLeaderboard = async function(client, guildId = lbConfig.defaultGui
                 (newest.level - COALESCE(oldest.level, 0)) AS levelDifference,
                 (newest.xp - COALESCE(oldest.xp, 0)) AS xpDifference
             FROM xpLevels_UserXPData newest
-            LEFT JOIN MonthOldXp oldest ON
+            INNER JOIN MonthOldXp oldest ON
                 newest.userId = oldest.userId AND
                 newest.guildId = oldest.guildId
             WHERE
@@ -70,8 +68,8 @@ exports.createLeaderboard = async function(client, guildId = lbConfig.defaultGui
             --acceptLB = 1 AND
             totalXpDifference > 0 AND
             guildId = ?
-        ORDER BY totalXpDifference DESC;
-        --LIMIT 10;
+        ORDER BY totalXpDifference DESC
+        LIMIT 25;
     `).all(oneMonthAgo, guildId);
     console.log(leaderBoardTop10);
 
@@ -105,17 +103,22 @@ exports.createLeaderboard = async function(client, guildId = lbConfig.defaultGui
         });
     }
     console.log(data);
-    if(canvasData.length > 0) await buildLeaderboardCanvas(client, canvasData, guild, oneMonthAgo);
-    // await uploadDataToDrive(data);
-    // await uploadCSVToDrive(contentString);
+    canvasData = canvasData.slice(0,3);
+    console.log(canvasData);
+    if(canvasData.length > 0) {
+        const canvas = await buildLeaderboardCanvas(canvasData, guild, oneMonthAgo);
+        await uploadCanvasToDrive(canvas);
+    }
+    await uploadDataToDrive(data);
+    await uploadCSVToDrive(contentString);
 };
 
 
 async function uploadDataToDrive(data) {
     const scopes = ["https://www.googleapis.com/auth/spreadsheets"];
 
-    const auth = new google.auth.GoogleAuth({keyFile: "./credentials.json", scopes: scopes});
-    const service = google.sheets({version: "v4", auth});
+    const auth = new google.auth.GoogleAuth({ keyFile: "./credentials.json", scopes: scopes });
+    const service = google.sheets({ version: "v4", auth });
 
     const resource = {
         values: data
@@ -135,11 +138,11 @@ async function uploadDataToDrive(data) {
 }
 
 async function uploadCSVToDrive(content) {
-    const fileName = `bits4kidsBot_LeaderBoardExport_${new Date().toLocaleDateString("en-CA", { dateStyle: "short" }).replaceAll("-","_")}`;
+    const fileName = `bits4kidsBot_LeaderBoardExport_${new Date().toLocaleDateString("en-CA", { dateStyle: "short" }).replaceAll("-","_")}.csv`;
     const scopes = ["https://www.googleapis.com/auth/drive"];
 
-    const auth = new google.auth.GoogleAuth({keyFile: "./credentials.json", scopes: scopes});
-    const drive = google.drive({version: "v3", auth});
+    const auth = new google.auth.GoogleAuth({ keyFile: "./credentials.json", scopes: scopes });
+    const drive = google.drive({ version: "v3", auth });
     const fileMetaData = {
         name: fileName,
         parents: [lbConfig.driveExportFolderId],
@@ -162,7 +165,7 @@ async function uploadCSVToDrive(content) {
 }
 
 canvacord.Font.loadDefault();
-async function buildLeaderboardCanvas(client, canvasData, guild, oneMonthAgo) {
+async function buildLeaderboardCanvas(canvasData, guild, oneMonthAgo) {
     const card = new canvacord.LeaderboardBuilder()
         .setHeader({
             title: guild.name,
@@ -170,21 +173,42 @@ async function buildLeaderboardCanvas(client, canvasData, guild, oneMonthAgo) {
             subtitle: `Leaderboard ${new Date(oneMonthAgo).toLocaleDateString("de-AT", { dateStyle: "medium" })} - ${new Date().toLocaleDateString("de-AT", { dateStyle: "medium" })}`
         })
         .setTextStyles({
-            level: "XP Difference:"
+            level: "Aktivitätslevel:"
         })
-        .setBackground(lbConfig.backgroundImage)
         .setPlayers(canvasData)
         .setVariant("default");
     try {
         const image = await card.build({ format: "png" });
-        const imageMsg = new Discord.AttachmentBuilder(image, {name: "LeaderBoard.png"});
-        const user = await client.users.fetch(lbConfig.sendToUserId);
-        user.send({
-            content: "LeaderBoard:",
-            files: [imageMsg],
-        });
+        return image;
     } catch (error) {
         const logChannel = utils.findLogChannel(guild);
         logChannel?.send("Encountered an error while trying to create the leaderboard canvas!", error);
+    }
+}
+
+async function uploadCanvasToDrive(canvas) {
+    // const fileName = `bits4kidsBot_LeaderBoardExportCanvas_${new Date().toLocaleDateString("en-CA", { dateStyle: "short" }).replaceAll("-","_")}.png`;
+    const scopes = ["https://www.googleapis.com/auth/drive"];
+
+    const auth = new google.auth.GoogleAuth({ keyFile: "./credentials.json", scopes: scopes });
+    const drive = google.drive({ version: "v3", auth });
+    // const fileMetaData = {
+    //     // name: fileName,
+    //     parents: [lbConfig.driveExportFolderId]
+    // };
+    const media = {
+        mimeType: "image/png",
+        body: stream.Readable.from(canvas),
+    };
+    try {
+        const res = await drive.files.update({
+            fileId: lbConfig.driveExportCanvasId,
+            // requestBody: fileMetaData,
+            media: media,
+            fields: "id, webViewLink"
+        });
+        return(res.data);
+    } catch (err) {
+        console.error(err);
     }
 }
