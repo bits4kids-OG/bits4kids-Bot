@@ -71,7 +71,6 @@ exports.createLeaderboard = async function(client, guildId = lbConfig.defaultGui
         ORDER BY totalXpDifference DESC
         LIMIT ?;
     `).all(oneMonthAgo, guildId, lbUserLimit);
-    console.log(leaderBoardTop10);
 
     let guild = client.guilds.cache.get(guildId);
     if(!guild) guild = await client.guilds.fetch(guildId).catch(console.error) ?? {
@@ -80,6 +79,7 @@ exports.createLeaderboard = async function(client, guildId = lbConfig.defaultGui
     };
     let sheetsData = [];
     let contentString = "UserName;TotalXpDifferenceLast30Days;GuildName;UserId;GuildId\n";
+    const numOfColumns = (contentString.split("\n")[0].match(/;/g) || []).length + 1;
     let canvasData = [];
     for(const rows in leaderBoardTop10) {
         const rowOrig = leaderBoardTop10[rows];
@@ -102,10 +102,8 @@ exports.createLeaderboard = async function(client, guildId = lbConfig.defaultGui
             rank: canvasData.length + 1
         });
     }
-    sheetsData = [...sheetsData, ...Array(Math.max((lbUserLimit - sheetsData.length), 0)).fill(Array(5).fill(""))];
-    console.log(sheetsData);
+    sheetsData = [...sheetsData, ...Array(Math.max((lbUserLimit - sheetsData.length), 0)).fill(Array(numOfColumns).fill(""))];
     canvasData = canvasData.slice(0,3);
-    console.log(canvasData);
     if(canvasData.length > 0) {
         const canvas = await buildLeaderboardCanvas(canvasData, guild, oneMonthAgo);
         await uploadCanvasToDrive(canvas);
@@ -159,6 +157,7 @@ async function uploadCSVToDrive(content) {
             media: media,
             fields: "id, webViewLink"
         });
+        console.log("Successfully uploaded the csv to Google Drive!");
         return(res.data);
     } catch (err) {
         console.error(err);
@@ -202,6 +201,7 @@ async function uploadCanvasToDrive(canvas) {
             media: media,
             fields: "id, webViewLink"
         });
+        console.log("Successfully uploaded the canvas to Google Drive!");
         return(res.data);
     } catch (err) {
         console.error(err);
