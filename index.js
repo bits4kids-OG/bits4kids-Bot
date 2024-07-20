@@ -121,9 +121,10 @@ client.on(Discord.Events.ClientReady, async () => {
     //Check VoiceLogRecovery
     voicelogUsers = utils.getVoicelogRecovery();
     Object.keys(voicelogUsers).forEach(async guildId => {
-        const guild = await client.guilds.fetch(guildId);
+        const guild = await client.guilds.fetch(guildId).catch(console.error);
         for(const user in voicelogUsers[guildId]) {
-            const member = await guild.members.fetch(user);
+            const member = await guild.members.fetch(user).catch(console.error);
+            if(!member) continue;
             if((!member.voice.channel) || ((!member.voice.channel.name.toLowerCase().includes(config.Meetingräume)))) {
                 const now = Date.now();
                 const duration = now - voicelogUsers[guildId][user].joined;
