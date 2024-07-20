@@ -109,22 +109,28 @@ for (const file of commandFiles) {
 
 client.on(Discord.Events.ClientReady, async () => {
     console.log(`Logged in as ${client.user.tag}!`);
-    client.user
-        .setPresence({ activities: [{ name: `-> ${defaultPrefix}help <-` }], status: "online" });
-  
-    client.guilds.cache.forEach(guild => {
-        guild.invites.fetch().then(guildInvites => {
-            invites[guild.id] = guildInvites;
-        });
-    });
+    client.user.setPresence({ activities: [{ name: `-> ${defaultPrefix}help <-` }], status: "online" });
+
+    try {
+        client.guilds.fetch().then((guildsCollection) => guildsCollection.each((partialGuild) => partialGuild.fetch().then((guild) => {
+            guild.invites.fetch().then((guildInvites) => {
+                invites[guild.id] = guildInvites;
+            });
+        })));
+    } catch (error) {
+        console.error("Encountered an error while trying to fetch guild invites:", error);
+    }
     
     //Check VoiceLogRecovery
     voicelogUsers = utils.getVoicelogRecovery();
-    Object.keys(voicelogUsers).forEach(async guildId => {
+    for(const guildId in voicelogUsers) {
         const guild = await client.guilds.fetch(guildId).catch(console.error);
         for(const user in voicelogUsers[guildId]) {
             const member = await guild.members.fetch(user).catch(console.error);
-            if(!member) continue;
+            if(!member) {
+                delete(voicelogUsers[guildId][user]);
+                continue;
+            }
             if((!member.voice.channel) || ((!member.voice.channel.name.toLowerCase().includes(config.Meetingräume)))) {
                 const now = Date.now();
                 const duration = now - voicelogUsers[guildId][user].joined;
@@ -139,7 +145,7 @@ client.on(Discord.Events.ClientReady, async () => {
         fs.writeFileSync("./voicelogRecovery.json", JSON.stringify(voicelogUsers, null, 2), err => {
             if(err) console.log(err);
         });
-    });
+    }
 
     const checkEventJob = cron.CronJob.from({
         cronTime: "00 00 03,15,20 * * *",
