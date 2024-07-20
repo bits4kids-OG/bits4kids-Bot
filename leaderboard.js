@@ -25,7 +25,7 @@ exports.changeAcceptLB = function(button, optState) {
 };
 
 
-exports.createLeaderboard = async function(client, guildId = lbConfig.defaultGuildId) {
+exports.createLeaderboard = async function(client, guildId = lbConfig.defaultGuildId, lbUserLimit = 25) {
     const oneMonthAgo = new Date().addMonths(-1).setHours(0,0,0,0);
     const leaderBoardTop10 = db.prepare(`--sql
         WITH MonthOldXp
@@ -69,8 +69,8 @@ exports.createLeaderboard = async function(client, guildId = lbConfig.defaultGui
             totalXpDifference > 0 AND
             guildId = ?
         ORDER BY totalXpDifference DESC
-        LIMIT 25;
-    `).all(oneMonthAgo, guildId);
+        LIMIT ?;
+    `).all(oneMonthAgo, guildId, lbUserLimit);
     console.log(leaderBoardTop10);
 
     let guild = client.guilds.cache.get(guildId);
@@ -78,7 +78,7 @@ exports.createLeaderboard = async function(client, guildId = lbConfig.defaultGui
         name: "",
         iconURL: () => "https://cdn.discordapp.com/embed/avatars/1.png",
     };
-    let data = [];
+    let sheetsData = [];
     let contentString = "UserName;TotalXpDifferenceLast30Days;GuildName;UserId;GuildId\n";
     let canvasData = [];
     for(const rows in leaderBoardTop10) {
@@ -90,7 +90,7 @@ exports.createLeaderboard = async function(client, guildId = lbConfig.defaultGui
             displayName: "User not found",
             displayAvatarURL: () => "https://cdn.discordapp.com/embed/avatars/1.png",
         };
-        data.push(
+        sheetsData.push(
             [user.tag, rowOrig.totalXpDifference, guild.name, rowOrig.userId, rowOrig.guildId]
         );
         contentString = contentString + `"${user.tag.replaceAll("\"", "\"\"")}";${rowOrig.totalXpDifference};"${guild.name}";${rowOrig.userId};${rowOrig.guildId}\n`;
@@ -102,14 +102,15 @@ exports.createLeaderboard = async function(client, guildId = lbConfig.defaultGui
             rank: canvasData.length + 1
         });
     }
-    console.log(data);
+    sheetsData = [...sheetsData, ...Array(Math.max((lbUserLimit - sheetsData.length), 0)).fill(Array(5).fill(""))];
+    console.log(sheetsData);
     canvasData = canvasData.slice(0,3);
     console.log(canvasData);
     if(canvasData.length > 0) {
         const canvas = await buildLeaderboardCanvas(canvasData, guild, oneMonthAgo);
         await uploadCanvasToDrive(canvas);
     }
-    await uploadDataToDrive(data);
+    await uploadDataToDrive(sheetsData);
     await uploadCSVToDrive(contentString);
 };
 
