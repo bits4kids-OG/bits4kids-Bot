@@ -3,7 +3,6 @@ const Discord = require("discord.js");
 const utils = require("../utils.js");
 
 const xp_levels = require("../xp-and-levels.js");
-const config = require("../config.json");
 
 const badgeLevelconfig = require("../badgeLevelconfig.json")["badges"];
 
@@ -14,7 +13,7 @@ module.exports = {
         .setName("badges")
         .setDescription("Zeigt dir deine bereits erhaltenen Badges an.")
         .setDefaultPermission(false),
-    execute(msg, args, client) {
+    async execute(msg, args, client) {
         if(args[0] && msg.mentions.users.first()) {
             if (!msg.member.permissions.has(Discord.PermissionsBitField.Flags.ManageRoles)) {
                 msg.author.send("Das darfst du nicht machen!");
@@ -25,11 +24,9 @@ module.exports = {
                 msg.reply("The bot can't have Badges!");
                 return;
             }
-            const normalTrainRole = msg.guild.roles.cache.find(r => r.id === config.TrainerRolle);
-            const trainRole = msg.guild.roles.cache.find(r => r.id === config.OnlineTrainerRolle);
-            const orgRole = msg.guild.roles.cache.find(r => r.id === config.OrganisationRolle);
-            const member = msg.guild.members.cache.get(user.id);
-            if ((normalTrainRole) && (trainRole) && (orgRole) && (member.roles) && ((member.roles.cache.has(normalTrainRole.id)) || (member.roles.cache.has(trainRole.id)) || (member.roles.cache.has(orgRole.id)))) {
+            let member = msg.guild.members.cache.get(user.id);
+            if(!member) member = await msg.guild.members.fetch(user.id).catch(console.error);
+            if(member.roles && utils.checkIfTrainer(member.roles.cache) === true) {
                 msg.reply("Error: Trainer:innen können keine XP besitzen.");
                 return;
             }
@@ -37,10 +34,7 @@ module.exports = {
 
         } else {
             const author = msg.author;
-            const normalTrainRole = msg.guild.roles.cache.find(r => r.id === config.TrainerRolle);
-            const trainRole = msg.guild.roles.cache.find(r => r.id === config.OnlineTrainerRolle);
-            const orgRole = msg.guild.roles.cache.find(r => r.id === config.OrganisationRolle);
-            if ((normalTrainRole) && (trainRole) && (orgRole) && (msg.member.roles) && ((msg.member.roles.cache.has(normalTrainRole.id)) || (msg.member.roles.cache.has(trainRole.id)) || (msg.member.roles.cache.has(orgRole.id)))) {
+            if(msg.member.roles && utils.checkIfTrainer(msg.member.roles.cache) === true) {
                 msg.reply("Error: Trainer:innen können keine XP besitzen.");
                 return;
             }

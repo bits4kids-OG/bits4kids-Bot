@@ -1,7 +1,6 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const Discord = require("discord.js");
 
-const config = require("../config.json");
 const utils = require("../utils.js");
 
 const Database = require("better-sqlite3");
@@ -20,7 +19,7 @@ module.exports = {
         .setName("xptimeout")
         .setDescription("Restricts the pinged user from getting XP.")
         .setDefaultPermission(false),
-    execute(msg, args, client, guildPrefix) {
+    async execute(msg, args, client, guildPrefix) {
         if (!msg.member.permissions.has(Discord.PermissionsBitField.Flags.ManageRoles)) {
             msg.author.send("Das darfst du nicht machen!");
             return;
@@ -39,11 +38,9 @@ module.exports = {
                 msg.reply("You can't give the bot xp!");
                 return;
             }
-            const normalTrainRole = msg.guild.roles.cache.find(r => r.id === config.TrainerRolle);
-            const trainRole = msg.guild.roles.cache.find(r => r.id === config.OnlineTrainerRolle);
-            const orgRole = msg.guild.roles.cache.find(r => r.id === config.OrganisationRolle);
-            const member = msg.guild.members.cache.get(user.id);
-            if ((normalTrainRole) && (trainRole) && (orgRole) && (member.roles) && ((member.roles.cache.has(normalTrainRole.id)) || (member.roles.cache.has(trainRole.id)) || (member.roles.cache.has(orgRole.id)))) {
+            let member = msg.guild.members.cache.get(user.id);
+            if(!member) member = await msg.guild.members.fetch(user.id).catch(console.error);
+            if(member.roles && utils.checkIfTrainer(member.roles.cache) === true) {
                 msg.reply("Error: Trainer:innen können keine XP besitzen.");
                 return;
             }

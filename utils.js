@@ -4,6 +4,7 @@ const fs = require("fs");
 const Database = require("better-sqlite3");
 const db = new Database("./b4kBot.db", {fileMustExist: true});
 
+const config = require("./config.json");
 
 exports.findGoodChannel = function(guild) {
     return guild.channels.cache
@@ -210,6 +211,13 @@ exports.getBeginners = function(msg) {
     return beginners;
 };
 
+exports.checkIfTrainer = function(memberRolesCache) {
+    if(memberRolesCache.has(config.TrainerRolle) || memberRolesCache.has(config.OnlineTrainerRolle) || memberRolesCache.has(config.OrganisationRolle)) {
+        return true;
+    } else {
+        return false;
+    }
+};
 
 exports.addVoicelogRecovery = function(guild, user) {
     let voicelogUsers = {};

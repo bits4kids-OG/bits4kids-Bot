@@ -388,10 +388,7 @@ client.on(Discord.Events.AutoModerationActionExecution, (execution) => {
         if ((execution.user.id === client.user.id) || (execution.user.bot)) {
             return;
         }
-        const normalTrainRole = execution.guild.roles.cache.find(r => r.id === config.TrainerRolle);
-        const trainRole = execution.guild.roles.cache.find(r => r.id === config.OnlineTrainerRolle);
-        const orgRole = execution.guild.roles.cache.find(r => r.id === config.OrganisationRolle);
-        if ((normalTrainRole) && (trainRole) && (orgRole) && (execution.member.roles) && ((execution.member.roles.cache.has(normalTrainRole.id)) || (execution.member.roles.cache.has(trainRole.id)) || (execution.member.roles.cache.has(orgRole.id)))) {
+        if(execution.member.roles && utils.checkIfTrainer(execution.member.roles.cache) === true) {
             return;
         }
         let guildPrefix = getPrefix(execution.guild.id);
@@ -410,10 +407,7 @@ client.on(Discord.Events.GuildScheduledEventUpdate, async (oldGuildScheduledEven
 
 //Voice Channel Detection
 client.on(Discord.Events.VoiceStateUpdate, (oldState, newState) => {
-    const normalTrainRole = newState.guild.roles.cache.find(r => r.id === config.TrainerRolle);
-    const trainRole = newState.guild.roles.cache.find(r => r.id === config.OnlineTrainerRolle);
-    const orgRole = newState.guild.roles.cache.find(r => r.id === config.OrganisationRolle);
-    if ((normalTrainRole) && (trainRole) && (orgRole) && (newState.member.roles) && ((newState.member.roles.cache.has(normalTrainRole.id)) || (newState.member.roles.cache.has(trainRole.id)) || (newState.member.roles.cache.has(orgRole.id)))) {
+    if(newState.member.roles && utils.checkIfTrainer(newState.member.roles.cache) === true) {
         return;
     }
     if ((newState.channel) && (oldState.channel) && (newState.channel.id === oldState.channel.id)) return;
@@ -489,7 +483,7 @@ client.on(Discord.Events.MessageCreate, async (msg) => {
         }
 
         //Trainer:innen bekommen keine XP
-        if((msg.member.roles) && ((msg.member.roles.cache.has(config.TrainerRolle)) || (msg.member.roles.cache.has(config.OnlineTrainerRolle)) || (msg.member.roles.cache.has(config.OrganisationRolle)))) {
+        if(msg.member.roles && utils.checkIfTrainer(msg.member.roles.cache) === true) {
             return;
         }
 
