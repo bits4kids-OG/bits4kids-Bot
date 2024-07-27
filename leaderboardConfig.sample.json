@@ -2,5 +2,9 @@
     "driveExportSheetId": "Id of the Google Drive Sheet File used for XP export",
     "driveExportFolderId": "Id of the Google Drive Folder used for XP export",
     "driveExportCanvasId": "Id of the Google Drive canvas image used for XP export",
-    "defaultGuildId": "Id of the guild for which the leaderboard will be exported"
+    "defaultGuildId": "Id of the guild for which the leaderboard will be exported",
+    "OCCroleIds": [
+        "Id of an OCC role part of the leaderboard role display filter",
+        "Id of another OCC role part of the leaderboard role display filter"
+    ]
 }

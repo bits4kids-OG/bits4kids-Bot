@@ -78,7 +78,7 @@ exports.createLeaderboard = async function(client, guildId = lbConfig.defaultGui
         iconURL: () => "https://cdn.discordapp.com/embed/avatars/1.png",
     };
     let sheetsData = [];
-    let contentString = "UserName;TotalXpDifferenceLast30Days;GuildName;UserId;GuildId\n";
+    let contentString = "UserName;TotalXpDifferenceLast30Days;GuildName;OCCs;UserId;GuildId\n";
     const numOfColumns = (contentString.split("\n")[0].match(/;/g) || []).length + 1;
     let canvasData = [];
     for(const rows in leaderBoardTop10) {
@@ -90,10 +90,18 @@ exports.createLeaderboard = async function(client, guildId = lbConfig.defaultGui
             displayName: "User not found",
             displayAvatarURL: () => "https://cdn.discordapp.com/embed/avatars/1.png",
         };
+        let roleNames = "";
+        if(guild.members) {
+            const member = guild.members.cache.get(user.id) || await guild.members.fetch(user.id).catch(console.error);
+            if(member?.roles) {
+                const OCCroles = member.roles.cache.filter((role) => lbConfig.OCCroleIds.includes(role.id)).map((role) => role.name);
+                roleNames = OCCroles.join("; ");
+            }
+        }
         sheetsData.push(
-            [user.tag, rowOrig.totalXpDifference, guild.name, rowOrig.userId, rowOrig.guildId]
+            [user.tag, rowOrig.totalXpDifference, guild.name, roleNames, rowOrig.userId, rowOrig.guildId]
         );
-        contentString = contentString + `"${user.tag.replaceAll("\"", "\"\"")}";${rowOrig.totalXpDifference};"${guild.name}";${rowOrig.userId};${rowOrig.guildId}\n`;
+        contentString = contentString + `"${user.tag.replaceAll("\"", "\"\"")}";${rowOrig.totalXpDifference};"${guild.name}";"${roleNames}";${rowOrig.userId};${rowOrig.guildId}\n`;
         canvasData.push({
             username: user.username,
             displayName: user.displayName,
