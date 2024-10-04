@@ -12,12 +12,12 @@
     "better-sqlite3": "^9.6.0",
     "canvacord": "^6.0.2",
     "cron": "^3.1.7",
-    "discord.js": "^14.15.3",
+    "discord.js": "^14.16.3",
     "dotenv": "^16.4.5",
     "googleapis": "^128.0.0",
     "node-fetch": "^2.7.0"
   },
   "devDependencies": {
-    "eslint": "^8.57.0"
+    "eslint": "^8.57.1"
   }
 }

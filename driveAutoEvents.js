@@ -54,8 +54,8 @@ exports.createEvents = async function(client) {
         if(event.scheduledStartTimestamp - Date.now() > 0) {
             const eventConfig = OCCconfig[event.club];
             if(!eventConfig) {
-                console.log(`Skipping ${event.name}: no channel assigned.`);
-                break;
+                console.log(`Skipping ${event.name}: no channel assigned. Supplied channel: ${event?.club}.`);
+                continue;
             }
             let eventGuild = client.guilds.cache.get(eventConfig.guildId);
             if(!eventGuild) eventGuild = await client.guilds.fetch(eventConfig.guildId).catch(console.error);
@@ -66,7 +66,7 @@ exports.createEvents = async function(client) {
                     .catch(console.error);
                 if(!eventChannel) {
                     console.log(`Skipping ${event.name}: no channel found.`);
-                    break;
+                    continue;
                 }
             }
             event.channelId = eventChannel.id;
@@ -246,7 +246,7 @@ exports.manualEventUpdate = async function(oldEvent, newEvent, client) {
 
         const eventConfig = OCCconfig[event.club];
         if(!eventConfig) {
-            console.log(`Skipping ${event.name}: no channel assigned.`);
+            console.log(`Skipping ${event.name}: no channel assigned. Supplied channel: ${event?.club}.`);
             return;
         }
         let eventGuild = client.guilds.cache.get(eventConfig.guildId);
@@ -269,16 +269,11 @@ exports.manualEventUpdate = async function(oldEvent, newEvent, client) {
         const service = google.sheets({version: "v4", auth});
 
         for(const updates in needUpdate) {
-            if(event[needUpdate[updates]] === newEvent[needUpdate[updates]]) break;
+            if(event[needUpdate[updates]] === newEvent[needUpdate[updates]]) continue;
             let value;
             let cell = "";
             if(needUpdate[updates] === "channelId") {
-                let club;
-                for(const key in OCCconfig) {
-                    if(OCCconfig[key].channelName === newEvent.channel.name) {
-                        club = key;
-                    }
-                }
+                const club = Object.keys(OCCconfig).find(key => OCCconfig[key].channelName === newEvent.channel.name);
                 if(!club) break;
                 if(!event.thumbnailURL) {
                     let img = "";

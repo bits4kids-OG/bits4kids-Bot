@@ -149,8 +149,8 @@ client.on(Discord.Events.ClientReady, async () => {
 
     const checkEventJob = cron.CronJob.from({
         cronTime: "00 00 03,15,20 * * *",
-        onTick: async () => {
-            await driveAutoEvents.createEvents(client);
+        onTick: () => {
+            driveAutoEvents.createEvents(client);
         },
         timeZone: "Europe/Vienna"
     });
@@ -168,8 +168,8 @@ client.on(Discord.Events.ClientReady, async () => {
 
     const exportLeaderBoard = cron.CronJob.from({
         cronTime: "00 30 03 * * *",
-        onTick: async () => {
-            await leaderboard.createLeaderboard(client);
+        onTick: () => {
+            leaderboard.createLeaderboard(client);
         },
         timeZone: "Europe/Vienna"
     });
@@ -437,7 +437,7 @@ client.on(Discord.Events.VoiceStateUpdate, (oldState, newState) => {
 
         if((userBeginner.joined) && ((Date.now() - userBeginner.joined) >= 4*week)) {
             const beginnerRole = utils.getRole(member, config.BeginnerRolle);
-            if(beginnerRole && member.roles.cache.has(beginnerRole) == true) {
+            if(beginnerRole && member.roles.cache.has(beginnerRole.id)) {
                 member.roles.remove(beginnerRole);
             }
             delete(beginners[member.guild.id][member.user.id]);

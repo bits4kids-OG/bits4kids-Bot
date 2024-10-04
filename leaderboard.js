@@ -114,10 +114,10 @@ exports.createLeaderboard = async function(client, guildId = lbConfig.defaultGui
     canvasData = canvasData.slice(0,3);
     if(canvasData.length > 0) {
         const canvas = await buildLeaderboardCanvas(canvasData, guild, oneMonthAgo);
-        await uploadCanvasToDrive(canvas);
+        uploadCanvasToDrive(canvas);
     }
-    await uploadDataToDrive(sheetsData);
-    await uploadCSVToDrive(contentString);
+    uploadDataToDrive(sheetsData);
+    uploadCSVToDrive(contentString);
 };
 
 
