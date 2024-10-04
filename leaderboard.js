@@ -66,7 +66,7 @@ exports.createLeaderboard = async function(client, guildId = lbConfig.defaultGui
         FROM baseXpLevelData
         WHERE
             --acceptLB = 1 AND
-            totalXpDifference > 0 AND
+            (levelDifference > 0 OR xpDifference > 0) AND
             guildId = ?
         ORDER BY totalXpDifference DESC
         LIMIT ?;

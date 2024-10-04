@@ -20,8 +20,7 @@ const insertXPHistory = db.prepare(`--sql
     INSERT INTO xpLevels_HistoryData (userId, guildId, changeDate, level, xp)
         VALUES (?, ?, ?, ?, ?)
         ON CONFLICT(userId, guildId, changeDate)
-        DO UPDATE SET
-            level = excluded.level;
+        DO NOTHING;
 `);
 
 module.exports = {
@@ -57,6 +56,9 @@ module.exports = {
 
             const userXP = utils.getXP(msg, user);
 
+            const todaysDate = new Date().setHours(0,0,0,0);
+            insertXPHistory.run(user.id, msg.guild.id, todaysDate, userXP.level, userXP.xp);
+
             if(userXP.level >= number) {
                 userXP.xp = 0;
             }
@@ -65,9 +67,6 @@ module.exports = {
             userXP.last_message = Date.now();
         
             writeLevel.run(user.id, msg.guild.id, userXP.level, userXP.xp, userXP.last_message);
-
-            const todaysDate = new Date().setHours(0,0,0,0);
-            insertXPHistory.run(user.id, msg.guild.id, todaysDate, userXP.level, userXP.xp);
 
             xp_levels.levelUp(msg, user, guildPrefix, userXP);
             msg.reply(`${user} wurde auf Level ${number} gesetzt!`);
