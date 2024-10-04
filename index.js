@@ -53,6 +53,7 @@ const cron = require("cron");
 const utils = require("./utils.js");
 const xp_levels = require("./xp-and-levels.js");
 const driveAutoEvents = require("./driveAutoEvents.js");
+const beginnerPurge = require("./beginnerPurge.js");
 
 
 if (!fs.existsSync("./backups")) {
@@ -174,6 +175,15 @@ client.on(Discord.Events.ClientReady, async () => {
         timeZone: "Europe/Vienna"
     });
     exportLeaderBoard.start();
+
+    const purgeBeginnersJob = cron.CronJob.from({
+        cronTime: "00 00 01 */5 * *",
+        onTick: () => {
+            beginnerPurge.purgeDefaultBeginners(client);
+        },
+        timeZone: "Europe/Vienna"
+    });
+    purgeBeginnersJob.start();
 });
 
 //automatisches Refreshen der Invites, bei Hinzufügen/Entfernen
