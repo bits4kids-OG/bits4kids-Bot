@@ -2,10 +2,23 @@ require("dotenv").config();
 
 const Discord = require("discord.js");
 
-const myIntents = new Discord.IntentsBitField();
-myIntents.add(Discord.GatewayIntentBits.MessageContent, Discord.GatewayIntentBits.GuildVoiceStates, Discord.GatewayIntentBits.DirectMessageReactions, Discord.GatewayIntentBits.GuildMembers, Discord.GatewayIntentBits.DirectMessages, Discord.GatewayIntentBits.GuildScheduledEvents, Discord.GatewayIntentBits.AutoModerationExecution, Discord.GatewayIntentBits.GuildMessageReactions, Discord.GatewayIntentBits.GuildMessages, Discord.GatewayIntentBits.GuildInvites, Discord.GatewayIntentBits.GuildMembers, Discord.GatewayIntentBits.Guilds);
+const intents = new Discord.IntentsBitField();
+intents.add(
+    Discord.GatewayIntentBits.MessageContent,
+    Discord.GatewayIntentBits.GuildVoiceStates,
+    Discord.GatewayIntentBits.DirectMessageReactions,
+    Discord.GatewayIntentBits.GuildMembers,
+    Discord.GatewayIntentBits.DirectMessages,
+    Discord.GatewayIntentBits.GuildScheduledEvents,
+    Discord.GatewayIntentBits.AutoModerationExecution,
+    Discord.GatewayIntentBits.GuildMessageReactions,
+    Discord.GatewayIntentBits.GuildMessages,
+    Discord.GatewayIntentBits.GuildInvites,
+    Discord.GatewayIntentBits.GuildMembers,
+    Discord.GatewayIntentBits.Guilds
+);
 
-const client = new Discord.Client({ intents: myIntents });
+const client = new Discord.Client({ intents });
 
 const Database = require("better-sqlite3");
 const db = new Database("./b4kBot.db");

@@ -24,6 +24,7 @@ async function purgeBeginners(msg) {
         purged: 0,
     };
 
+    await msg.guild.members.fetch();
 
     beginnerRole.members.forEach(member => {
         beginnerCounter.audited++;
@@ -33,7 +34,6 @@ async function purgeBeginners(msg) {
                 member.roles.remove(beginnerRole);
             }
             beginnerCounter.purged++;
-            delete(beginners[member.guild.id][member.user.id]);
         }
     });
 
