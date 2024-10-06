@@ -29,7 +29,7 @@ async function purgeBeginners(msg) {
     beginnerRole.members.forEach(member => {
         beginnerCounter.audited++;
 
-        if(!(member in guildbeginners)) {
+        if(!(member.user.id in guildbeginners)) {
             if(member?.roles && member.roles.cache.has(beginnerRole.id)) {
                 member.roles.remove(beginnerRole);
             }
@@ -64,15 +64,18 @@ async function purgeBeginners(msg) {
 }
 
 async function purgeDefaultBeginners(client, guildId = lbConfig.defaultGuildId) {
-    let guild = client.guilds.cache.get(guildId);
-    if(!guild) guild = await client.guilds.fetch(guildId).catch(console.error);
+    let guild = client.guilds.cache.get(guildId) || await client.guilds.fetch(guildId).catch(console.error);
+    if(!guild) return;
+    const logChannel = utils.findLogChannel(guild);
 
     const beginnerCounter = await purgeBeginners({ guild, reply: console.warn });
 
     if(beginnerCounter) {
-        console.log(`Audited ${beginnerCounter.audited} users and purged ${beginnerCounter.purged} beginners.`);
+        logChannel?.send(`Audited ${beginnerCounter.audited} users and purged ${beginnerCounter.purged} beginners.`);
     } else {
-        console.warn("No beginner purge possible on this guild.");
+        const msg = "Warning: No beginner purge possible on this guild.";
+        console.warn(msg);
+        logChannel?.send(msg);
     }
     
 }

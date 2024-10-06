@@ -244,12 +244,18 @@ exports.addVoicelogRecovery = function(guild, user) {
     return voicelogUsers;
 };
 
-exports.getVoicelogRecovery = function() {
-    let voicelogUsers = {};
-    if(fs.existsSync("./voicelogRecovery.json")) {
-        voicelogUsers = JSON.parse(fs.readFileSync("./voicelogRecovery.json", "utf8"));
+exports.readRecoveryFile = function(fileName) {
+    let users = {};
+    
+    try {
+        if(fs.existsSync(fileName)) {
+            users = JSON.parse(fs.readFileSync(fileName, "utf8"));
+        }
+    } catch(err) {
+        console.error(err);
     }
-    return voicelogUsers;
+
+    return users;
 };
 
 exports.msToTime = function(duration) {

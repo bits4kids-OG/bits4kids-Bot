@@ -31,7 +31,7 @@ module.exports = {
         const week = day * 7;
           
         let beginnerEmpty = [];
-        let allUserString = "Username;Gejoined am;Beginner bis\n"; // CSV Spaltennamen
+        let allUserString = "UserId;Username;Gejoined am;Beginner bis\n"; // CSV Spaltennamen
         let sendString = false;
 
         for(const key in guildbeginners) {
@@ -48,7 +48,7 @@ module.exports = {
             const beginnerJoinedDate = new Date(time);
             const beginnerDate = new Date(beginnerBis);
 
-            userString = `"${user.tag.replaceAll("\"", "\"\"")}";"${beginnerJoinedDate.toLocaleString("de-DE").replace(",", "")}";"${beginnerDate.toLocaleString("de-DE").replace(",", "")}"\n`;
+            userString = `"${key}";"${user.tag.replaceAll("\"", "\"\"")}";"${beginnerJoinedDate.toLocaleString("de-DE").replace(",", "")}";"${beginnerDate.toLocaleString("de-DE").replace(",", "")}"\n`;
             allUserString = allUserString + userString;
         }
 

@@ -100,7 +100,7 @@ if(fs.existsSync("./buttons.json")) {
 }
 
 const invites = {};
-let fromWhere = {};
+let fromWhere = utils.readRecoveryFile("./pendingUsers.json") ?? {};
 
 let voicelogUsers = {};
 
@@ -136,7 +136,7 @@ client.on(Discord.Events.ClientReady, async () => {
     }
     
     //Check VoiceLogRecovery
-    voicelogUsers = utils.getVoicelogRecovery();
+    voicelogUsers = utils.readRecoveryFile("./voicelogRecovery.json") ?? {};
     for(const guildId in voicelogUsers) {
         const guild = await client.guilds.fetch(guildId).catch(console.error);
         for(const user in voicelogUsers[guildId]) {
@@ -287,11 +287,16 @@ client.on(Discord.Events.GuildMemberAdd, member => {
         const inviter = client.users.cache.get(invite.inviter.id);
         const logChannel = utils.findLogChannel(member.guild);
         logChannel?.send(`${member.user} joined using invite code ${invite.code} from ${inviter}. Invite was used ${invite.uses} times since its creation. This was the URL: ${invite.url}\nAwaiting Membership Screening.`);
+        
         if(member.guild.id in fromWhere === false) {
             fromWhere[member.guild.id] = {};
         }
         let guildMember = fromWhere[member.guild.id];
         guildMember[member.id] = invite;
+
+        fs.writeFile("./pendingUsers.json", JSON.stringify(fromWhere, null, 2), err => {
+            if(err) console.log(err);
+        });
     });
 });
 
