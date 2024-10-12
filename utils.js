@@ -6,16 +6,6 @@ const db = new Database("./b4kBot.db", {fileMustExist: true});
 
 const config = require("./config.json");
 
-exports.findGoodChannel = function(guild) {
-    return guild.channels.cache
-        .filter((channel) => {
-            if (channel.type !== Discord.ChannelType.GuildText) return false;
-            return channel
-                .permissionsFor(guild.members.me)
-                .has(Discord.PermissionsBitField.Flags.SendMessages);
-        })
-        .first();
-};
 const inviteCodeReg = /^[a-z0-9]+$/i;
   
 exports.getInviteCode = function(inviteCode) {
@@ -310,10 +300,11 @@ function findGoodChannel(guild) {
             if (channel.type !== Discord.ChannelType.GuildText) return false;
             return channel
                 .permissionsFor(guild.members.me)
-                .has(Discord.PermissionsBitField.Flags.SendMessages);
+                .has([Discord.PermissionsBitField.Flags.SendMessages, Discord.PermissionsBitField.Flags.ViewChannel]);
         })
         .first();
 }
+exports.findGoodChannel = findGoodChannel;
 
 Date.isLeapYear = function (year) { 
     return (((year % 4 === 0) && (year % 100 !== 0)) || (year % 400 === 0)); 

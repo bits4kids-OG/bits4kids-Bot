@@ -551,15 +551,11 @@ client.on(Discord.Events.MessageCreate, async (msg) => {
 });
 
 //Willkommensnachricht des Bots
-client.on(Discord.Events.GuildCreate, async (guild) => {
+client.on(Discord.Events.GuildCreate, (guild) => {
     const channel = utils.findGoodChannel(guild);
     let guildPrefix = getPrefix(guild.id);
     if (!guildPrefix) guildPrefix = defaultPrefix;
-    if (channel) {
-        channel.send(
-            `Hallo! Ich bin ein nützlicher Discord Bot, der vom Programmierer und Discord-Benutzer emeraldingg#2697 erstellt wurde. Mein aktueller Prefix ist ${guildPrefix}. Mit mir kannst du Katzenfotos bekommen, zufällige Zahlen erstellen und Blackjack spielen.\nIch hoffe du hast Spaß! Version: ${version}`
-        );
-    }
+    channel?.send(`Hallo! Ich bin ein nützlicher Discord Bot, der vom Programmierer und Discord-Benutzer emeraldingg#2697 erstellt wurde. Mein aktueller Prefix ist ${guildPrefix}. Mit mir kannst du Katzenfotos bekommen, zufällige Zahlen erstellen und Blackjack spielen.\nIch hoffe du hast Spaß! Version: ${version}`);
     guild.invites.fetch().then(guildInvites => {
         invites[guild.id] = guildInvites;
     });
