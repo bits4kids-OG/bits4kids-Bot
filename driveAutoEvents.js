@@ -75,7 +75,7 @@ exports.createEvents = async function(client) {
 
             if(!existingEvents[eventGuild.id]) {
                 let discordEvents = await eventGuild.scheduledEvents.fetch();
-                existingEvents[eventGuild.id] = Array.from(discordEvents.values());
+                existingEvents[eventGuild.id] = Array.from(discordEvents.values()).filter(event => event.creator === client.user);
             }
             if(!logChannels[eventGuild.id]) {
                 logChannels[eventGuild.id] = utils.findLogChannel(eventGuild);
@@ -195,7 +195,7 @@ exports.createEvents = async function(client) {
         if(!guild) guild = await client.guilds.fetch(AllOCCconfig.alwaysCheckGuilds[guildsIndex]).catch(console.error);
         if(!existingEvents[guild.id]) {
             let discordEvents = await guild.scheduledEvents.fetch();
-            existingEvents[guild.id] = Array.from(discordEvents.values());
+            existingEvents[guild.id] = Array.from(discordEvents.values()).filter(event => event.creator === client.user);
         }
         if(!logChannels[guild.id]) {
             logChannels[guild.id] = utils.findLogChannel(guild);
