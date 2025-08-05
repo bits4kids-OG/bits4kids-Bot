@@ -6,5 +6,11 @@
     "OCCroleIds": [
         "Id of an OCC role part of the leaderboard role display filter",
         "Id of another OCC role part of the leaderboard role display filter"
-    ]
+    ],
+    "FtpHostName": "Hostname of the FTP server for leaderboard exports",
+    "FtpUserName": "Username for the FTP server",
+    "FtpPassword": "Password for the FTP server",
+    "FtpExportPath": "Path on the FTP server where leaderboard exports will be stored",
+    "FtpExportFileName": "Name of the file to be used for FTP leaderboard exports",
+    "backgroundImageFile": "Name of the background image file used for the leaderboard canvas"
 }

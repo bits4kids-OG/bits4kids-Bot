@@ -1,14 +1,17 @@
 const lbConfig = require("./leaderboardConfig.json");
 
-const {google} = require("googleapis");
+const { google } = require("googleapis");
 
 const Database = require("better-sqlite3");
-const db = new Database("./b4kBot.db", {fileMustExist: true});
+const db = new Database("./b4kBot.db", { fileMustExist: true });
 
 const stream = require("stream");
 
 const canvacord = require("canvacord");
 const utils = require("./utils.js");
+
+const ftp = require("basic-ftp");
+const { Readable } = require("stream");
 
 
 const writeLBOptin = db.prepare(`--sql
@@ -114,7 +117,12 @@ exports.createLeaderboard = async function(client, guildId = lbConfig.defaultGui
     canvasData = canvasData.slice(0,3);
     if(canvasData.length > 0) {
         const canvas = await buildLeaderboardCanvas(canvasData, guild, oneMonthAgo);
+        if(!canvas) {
+            console.error("Failed to create leaderboard canvas.");
+            return;
+        }
         uploadCanvasToDrive(canvas);
+        uploadLeaderboardToFtp(canvas);
     }
     uploadDataToDrive(sheetsData);
     uploadCSVToDrive(contentString);
@@ -184,6 +192,7 @@ async function buildLeaderboardCanvas(canvasData, guild, oneMonthAgo) {
             level: "Aktivitätslevel:"
         })
         .setPlayers(canvasData)
+        .setBackground(lbConfig.backgroundImageFile)
         .setVariant("default");
     try {
         const image = await card.build({ format: "png" });
@@ -214,4 +223,25 @@ async function uploadCanvasToDrive(canvas) {
     } catch (err) {
         console.error(err);
     }
+}
+
+async function uploadLeaderboardToFtp(buffer) {
+    const client = new ftp.Client();
+    try {
+        await client.access({
+            host: lbConfig.FtpHostName,
+            user: lbConfig.FtpUserName,
+            password: lbConfig.FtpPassword,
+            secure: true
+        });
+        await client.ensureDir(lbConfig.FtpExportPath);
+        // Convert buffer to Readable stream
+        const readableStream = Readable.from(buffer);
+        await client.uploadFrom(readableStream, `${lbConfig.FtpExportPath}/${lbConfig.FtpExportFileName}`);
+
+        console.log("Leaderboard erfolgreich per FTP hochgeladen!");
+    } catch (err) {
+        console.error("FTP-Upload fehlgeschlagen:", err);
+    }
+    client.close();
 }

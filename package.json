@@ -10,6 +10,7 @@
   "author": "emeraldingg",
   "license": "ISC",
   "dependencies": {
+    "basic-ftp": "^5.0.5",
     "better-sqlite3": "^12.2.0",
     "canvacord": "^6.0.2",
     "cron": "^4.3.3",

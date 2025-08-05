@@ -10,7 +10,6 @@ module.exports = {
         try {
             const response = await fetch("https://cataas.com/cat?json=true");
             const catObj = await response.json();
-            console.log(catObj);
             let catUrl;
             if(!args[0]) {
                 catUrl = `https://cataas.com/cat/${catObj.id}`;
