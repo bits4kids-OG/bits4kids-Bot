@@ -192,7 +192,7 @@ async function buildLeaderboardCanvas(canvasData, guild, oneMonthAgo) {
             level: "Aktivitätslevel:"
         })
         .setPlayers(canvasData)
-        .setBackground(lbConfig.backgroundImageFile)
+        // .setBackground(lbConfig.backgroundImageFile)
         .setVariant("default");
     try {
         const image = await card.build({ format: "png" });

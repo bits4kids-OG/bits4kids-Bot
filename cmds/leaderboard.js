@@ -16,7 +16,7 @@ module.exports = {
 
         msg.reply("🏆 Leaderboard wird generiert ...");
 
-        await leaderboard.createLeaderboard(client);
+        await leaderboard.createLeaderboard(client, msg.guild.id);
         msg.reply("🏆 Leaderboard wurde aktualisiert!");
     
     },
