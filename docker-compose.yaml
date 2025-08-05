@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  bits4kids-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app # Bind the current directory to /app in the container
+      - /app/node_modules # Prevent overwriting node_modules in the container
+    environment:
+      - NODE_ENV=testing
+    restart: always

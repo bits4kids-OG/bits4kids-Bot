@@ -1,5 +1,3 @@
-require("dotenv").config();
-
 const Discord = require("discord.js");
 
 const intents = new Discord.IntentsBitField();

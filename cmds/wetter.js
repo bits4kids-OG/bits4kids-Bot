@@ -2,7 +2,6 @@ const { SlashCommandBuilder } = require("@discordjs/builders");
 const Discord = require("discord.js");
 const utils = require("../utils.js");
 const config = require("../config.json");
-const fetch = require("node-fetch");
 
 module.exports = {
     data: new SlashCommandBuilder()

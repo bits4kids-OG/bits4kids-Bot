@@ -1,7 +1,6 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const Discord = require("discord.js");
 const utils = require("../utils.js");
-const fetch = require("node-fetch");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -9,13 +8,15 @@ module.exports = {
         .setDescription("Zeigt ein zufälliges Katzenbild an."),
     async execute(msg, args) {
         try {
-            const catObj = await (await fetch("https://cataas.com/cat?json=true")).json();
+            const response = await fetch("https://cataas.com/cat?json=true");
+            const catObj = await response.json();
+            console.log(catObj);
             let catUrl;
             if(!args[0]) {
-                catUrl = `https://cataas.com/cat/${catObj._id}`;
+                catUrl = `https://cataas.com/cat/${catObj.id}`;
             } else {
                 let text = encodeURIComponent(args.join(" "));
-                catUrl = `https://cataas.com/cat/${catObj._id}/says/${text}`;
+                catUrl = `https://cataas.com/cat/${catObj.id}/says/${text}`;
             }
             const embed = new Discord.EmbedBuilder()
                 .setColor(utils.randomColor())

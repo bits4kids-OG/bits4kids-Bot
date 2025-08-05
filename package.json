@@ -1,21 +1,20 @@
 {
   "name": "bits4kids",
-  "version": "5.1.0",
+  "version": "5.1.1",
   "description": "Discord Bot",
   "main": "index.js",
   "scripts": {
-    "test": "node index.js"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node --env-file=.env index.js"
   },
   "author": "emeraldingg",
   "license": "ISC",
   "dependencies": {
-    "better-sqlite3": "^9.6.0",
+    "better-sqlite3": "^12.2.0",
     "canvacord": "^6.0.2",
-    "cron": "^3.1.7",
-    "discord.js": "^14.16.3",
-    "dotenv": "^16.4.5",
-    "googleapis": "^128.0.0",
-    "node-fetch": "^2.7.0"
+    "cron": "^4.3.3",
+    "discord.js": "^14.21.0",
+    "googleapis": "^155.0.0"
   },
   "devDependencies": {
     "eslint": "^8.57.1"
