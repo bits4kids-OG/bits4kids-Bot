@@ -179,7 +179,7 @@ client.on(Discord.Events.ClientReady, async () => {
 
 
     const exportLeaderBoard = cron.CronJob.from({
-        cronTime: "00 30 03 * * *",
+        cronTime: "00 30 03 01 * *",
         onTick: () => {
             leaderboard.createLeaderboard(client);
         },
